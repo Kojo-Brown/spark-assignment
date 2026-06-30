@@ -367,12 +367,13 @@ let S = {
   nav: 'walk',       // 'walk' | 'summary' | 'deal'
   sectionIdx: 0,     // active section tab index
   roomIdx: 0,        // active room instance index within multi section
-  overlay: null,     // 'projects' | 'settings' | 'rooms' | 'export' | 'additem' | null
+  overlay: null,     // 'projects' | 'settings' | 'rooms' | 'export' | 'additem' | 'prompt' | null
   expandedGroups: new Set(),
   addItemCtx: null,  // { sectionType, groupId, roomId }
   draftItem: {name:'', cost:'', unit:'ea.'},
   priceScope: 'project',
   priceSearch: '',
+  promptModal: null, // { title, placeholder, value, callback }
   dealData: {},      // per project, stored in project
   // Current project
   projectId: null,
@@ -627,6 +628,10 @@ function renderHeader() {
   <div class="hdr">
     <div class="hdr-inner">
       <button class="icon" onclick="openProjects()" style="background:none;border:none;cursor:pointer;color:var(--fg);padding:4px;">${ICONS.menu}</button>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <img src="logo.png" alt="Spark" style="height:18px;opacity:.85;" onerror="this.style.display='none'">
+        <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted-fg);text-transform:uppercase;">Estimator</span>
+      </div>
       <div style="display:flex;align-items:center;gap:2px;">
         <button onclick="openRooms()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:6px;">${ICONS.rooms}</button>
         <button onclick="openSettings()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:6px;">${ICONS.settings}</button>
@@ -720,7 +725,7 @@ function renderItem(instId, itemId, isCustom, custDef) {
 
   return `
   <div class="item-row" data-key="${key}">
-    <button class="item-check${s.checked?' checked':''}" onclick="toggleItem('${key}')" style="margin-top:1px;"></button>
+    <button class="item-check${s.checked?' checked':''}" onclick="toggleItem('${key}')" style="margin-top:1px;">${s.checked?ICONS.check.replace('currentColor','#fff'):''}</button>
     <div class="item-body">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
         <span class="item-name${s.checked?'':' dim'}">${esc(name)}</span>
@@ -800,7 +805,7 @@ function renderGroup(stId, instId, gid) {
   const showBadge = checkedCount > 0 && !naChecked;
 
   return `
-  <div class="group-card${checkedCount>0||naChecked?' has-items':''}">
+  <div class="group-card${checkedCount>0||naChecked?' has-items':''}" data-custkey="${custKey}">
     <button class="group-header" onclick="toggleGroup('${custKey}')">
       <div style="display:flex;align-items:center;gap:9px;min-width:0;">
         <span style="color:var(--muted-fg);flex:none;">${exp ? ICONS.up : ICONS.down}</span>
@@ -1141,9 +1146,9 @@ function renderSettingsSheet() {
     </div>`;
   }).join('');
 
-  const projStyle = (s) => s==='project'
-    ? `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:var(--card);border:none;cursor:pointer;box-shadow:var(--shadow);color:var(--fg);`
-    : `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);`;
+  const activeTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:var(--card);border:none;cursor:pointer;box-shadow:var(--shadow);color:var(--fg);`;
+  const inactiveTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);`;
+  const projStyle = (scope) => scope===S.priceScope ? activeTabStyle : inactiveTabStyle;
 
   return `
   <div class="overlay-bg" onclick="closeOverlay()"></div>
@@ -1156,7 +1161,7 @@ function renderSettingsSheet() {
     <div style="padding:12px 16px 8px;">
       <div style="display:flex;gap:4px;padding:4px;background:var(--muted);border-radius:9px;">
         <button onclick="setPriceScope('project')" style="${projStyle('project')}">This project</button>
-        <button onclick="setPriceScope('global')" style="${projStyle(S.priceScope==='project'?'project':'global')==='project'&&S.priceScope==='global'?'project':'global'}">All projects</button>
+        <button onclick="setPriceScope('global')" style="${projStyle('global')}">All projects</button>
       </div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:8px;border:1px solid var(--input-border);border-radius:10px;padding:9px 11px;background:var(--bg);">
         ${ICONS.search}
@@ -1242,6 +1247,48 @@ function renderAddItemModal() {
 // =============================================================
 // MAIN RENDER
 // =============================================================
+// =============================================================
+// RENDER - PROMPT MODAL (replaces browser prompt())
+// =============================================================
+function renderPromptModal() {
+  const pm = S.promptModal;
+  if (!pm) return '';
+  return `
+  <div class="overlay-bg" onclick="cancelPrompt()"></div>
+  <div class="center-modal">
+    <div class="modal-card">
+      <p style="margin:0 0 14px;font-size:17px;font-weight:700;">${esc(pm.title)}</p>
+      <input id="prompt-input" value="${esc(pm.value||'')}" placeholder="${esc(pm.placeholder||'')}"
+        oninput="S.promptModal.value=this.value"
+        onkeydown="if(event.key==='Enter')confirmPrompt();if(event.key==='Escape')cancelPrompt()"
+        style="width:100%;margin-bottom:14px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:15px;outline:none;">
+      <div style="display:flex;gap:10px;">
+        <button class="btn-ghost" style="flex:1;" onclick="cancelPrompt()">Cancel</button>
+        <button class="btn-primary" style="flex:1.4;" onclick="confirmPrompt()">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+function showPromptModal(title, placeholder, defaultVal, callback) {
+  S.promptModal = {title, placeholder, value: defaultVal || '', callback};
+  S.overlay = 'prompt';
+  render();
+  setTimeout(() => { const el = document.getElementById('prompt-input'); if(el){el.focus();el.select();} }, 50);
+}
+function confirmPrompt() {
+  const val = S.promptModal?.value?.trim();
+  const cb  = S.promptModal?.callback;
+  S.promptModal = null;
+  S.overlay = null;
+  if (val && cb) cb(val);
+  else render();
+}
+function cancelPrompt() {
+  S.promptModal = null;
+  S.overlay = null;
+  render();
+}
+
 function render() {
   const sects = activeSections();
   S.sectionIdx = Math.min(S.sectionIdx, Math.max(0, sects.length-1));
@@ -1257,6 +1304,7 @@ function render() {
   if (S.overlay === 'settings') overlay = renderSettingsSheet();
   if (S.overlay === 'export')   overlay = renderExportModal();
   if (S.overlay === 'additem')  overlay = renderAddItemModal();
+  if (S.overlay === 'prompt')   overlay = renderPromptModal();
 
   document.getElementById('root').innerHTML =
     renderHeader() + content + renderNav() + overlay;
@@ -1428,34 +1476,38 @@ function switchProject(id) {
 }
 
 function deleteProject(id) {
-  if (!confirm('Delete this project? This cannot be undone.')) return;
-  saveAllProjects(loadAllProjects().filter(p => p.id !== id));
-  render();
+  const list = loadAllProjects();
+  const proj = list.find(p => p.id === id);
+  if (!proj) return;
+  showPromptModal(`Delete "${proj.name}"?`, 'Type DELETE to confirm', '', val => {
+    if (val.toUpperCase() !== 'DELETE') { showToast('Cancelled'); return; }
+    saveAllProjects(loadAllProjects().filter(p => p.id !== id));
+    render();
+  });
 }
 
 function newProject() {
-  const name = prompt('Project name (e.g. 123 Main St):');
-  if (!name?.trim()) return;
-  saveCurrentProject();
-  S.projectId = `proj_${Date.now()}`;
-  S.projectName = name.trim();
-  S.sections = defaultSections();
-  S.items = {}; S.photos = {}; S.customItems = {}; S.deletedItems = {};
-  S.projPrices = {}; S.dealARV = ''; S.dealPurchase = ''; S.dealWeeks = 12;
-  S.sectionIdx = 0; S.roomIdx = 0; S.nav = 'walk';
-  S.expandedGroups = new Set();
-  ensureItemKeys();
-  saveCurrentProject();
-  S.overlay = null;
-  render();
+  showPromptModal('New Project', 'e.g. 123 Main St', '', name => {
+    saveCurrentProject();
+    S.projectId = `proj_${Date.now()}`;
+    S.projectName = name;
+    S.sections = defaultSections();
+    S.items = {}; S.photos = {}; S.customItems = {}; S.deletedItems = {};
+    S.projPrices = {}; S.dealARV = ''; S.dealPurchase = ''; S.dealWeeks = 12;
+    S.sectionIdx = 0; S.roomIdx = 0; S.nav = 'walk';
+    S.expandedGroups = new Set();
+    ensureItemKeys();
+    saveCurrentProject();
+    render();
+  });
 }
 
 function renameProject() {
-  const name = prompt('Rename project:', S.projectName);
-  if (!name?.trim()) return;
-  S.projectName = name.trim();
-  scheduleSave();
-  render();
+  showPromptModal('Rename Project', 'e.g. 123 Main St', S.projectName, name => {
+    S.projectName = name;
+    scheduleSave();
+    render();
+  });
 }
 
 // Room management
@@ -1497,8 +1549,7 @@ function addRoom(stId) {
 
 function removeRoom(stId, idx) {
   const insts = S.sections[stId]?.instances || [];
-  if (insts.length <= (stId==='bathroom'?1:0)) { showToast('Cannot remove last room'); return; }
-  if (!confirm(`Remove "${insts[idx]?.name}"? All entries will be lost.`)) return;
+  if (insts.length <= (stId==='bathroom'?1:0)) { showToast('Cannot remove last bathroom'); return; }
   const inst = insts[idx];
   insts.splice(idx, 1);
   // clean up item state for removed instance
@@ -1514,11 +1565,11 @@ function removeRoom(stId, idx) {
 function renameRoom(stId, idx) {
   const inst = S.sections[stId]?.instances?.[idx];
   if (!inst) return;
-  const name = prompt('Rename room:', inst.name);
-  if (!name?.trim()) return;
-  inst.name = name.trim();
-  scheduleSave();
-  render();
+  showPromptModal('Rename Room', 'e.g. Master Bath', inst.name, name => {
+    inst.name = name;
+    scheduleSave();
+    render();
+  });
 }
 
 // =============================================================
@@ -1532,6 +1583,17 @@ function updateTotalsInPlace(changedKey) {
     const t = calcLineTotal(itemId, S.items[changedKey]);
     const el = card.querySelector('.item-total');
     if (el) { el.textContent = t>0?fmt$(t):'—'; el.className = `item-total ${t>0?'has-val':'no-val'} mono`; }
+    // also patch group total
+    const groupCard = card.closest('.group-card');
+    if (groupCard) {
+      const custKey = groupCard.dataset.custkey;
+      if (custKey) {
+        const [gInstId, gid] = custKey.split(':');
+        const gt = calcGroupTotal(gInstId, gid, S.customItems[custKey]);
+        const gte = groupCard.querySelector('.group-total');
+        if (gte) { gte.textContent = gt>0?fmt$(gt):'—'; gte.className = `group-total ${gt>0?'has-val':'no-val'} mono`; }
+      }
+    }
   }
   // Update grand total
   const gt = document.querySelector('.hdr-total-num');
