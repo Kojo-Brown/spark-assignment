@@ -85,25 +85,26 @@ input[type=number]{-moz-appearance:textfield;}
 .group-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
 .group-card.has-items{border-color:color-mix(in srgb,var(--primary) 40%,var(--border));}
 .group-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:transparent;border:none;cursor:pointer;width:100%;text-align:left;color:var(--fg);}
-.group-label{font-size:14px;font-weight:600;}
-.group-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--primary-soft);color:var(--primary);}
-.group-reviewed{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--muted);color:var(--muted-fg);}
-.group-total{font-size:14px;font-weight:700;white-space:nowrap;}
+.group-label{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.group-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--primary-soft);color:var(--primary);flex:none;}
+.group-reviewed{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--muted);color:var(--muted-fg);flex:none;}
+.group-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;}
 .group-total.has-val{color:var(--primary);}
 .group-total.no-val{color:var(--border);}
-.group-body{border-top:1px solid var(--border);}
+.group-body{border-top:1px solid var(--border);animation:gbIn .16s ease;}
+@keyframes gbIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
 
 /* Line items */
 .item-row{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
-.item-row:last-child{border-bottom:none;}
+.group-body>.item-row:last-of-type{border-bottom:none;}
 .item-check{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--input-border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;margin-top:1px;}
 .item-check.na{border-radius:99px;}
 .item-check.checked{background:var(--primary);border-color:var(--primary);}
 .item-body{flex:1;min-width:0;}
-.item-name{font-size:13.5px;font-weight:600;line-height:1.3;transition:color .15s;}
+.item-name{font-size:13.5px;font-weight:600;line-height:1.3;transition:color .15s;overflow-wrap:break-word;word-break:break-word;}
 .item-name.dim{color:var(--muted-fg);}
-.item-meta{font-size:11.5px;color:var(--muted-fg);margin-top:2px;}
-.item-total{font-size:14px;font-weight:700;white-space:nowrap;transition:color .15s;}
+.item-meta{font-size:11.5px;color:var(--muted-fg);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+.item-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;transition:color .15s;}
 .item-total.has-val{color:var(--primary);}
 .item-total.no-val{color:var(--border);}
 .item-na-label{font-size:13px;font-style:italic;color:var(--muted-fg);}
@@ -738,12 +739,12 @@ function renderItem(instId, itemId, isCustom, custDef) {
     <button class="item-check${s.checked?' checked':''}" onclick="toggleItem('${key}')" style="margin-top:1px;">${s.checked?ICONS.check.replace('currentColor','#fff'):''}</button>
     <div class="item-body">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-        <span class="item-name${s.checked?'':' dim'}">${esc(name)}</span>
+        <span class="item-name${s.checked?'':' dim'}" style="flex:1;min-width:0;">${esc(name)}</span>
         <span class="item-total ${tot>0?'has-val':'no-val'} mono">${tot>0?fmt$(tot):'—'}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0;">
         <span class="item-meta">${costLabel}${minNote}</span>
-        <button class="qty-del" onclick="deleteItem('${key}')" title="Remove item">${ICONS.trash}</button>
+        <button class="qty-del" onclick="deleteItem('${key}')" title="Remove item" style="flex:none;">${ICONS.trash}</button>
       </div>
       ${s.checked ? `
       <div class="qty-row">
@@ -817,7 +818,7 @@ function renderGroup(stId, instId, gid) {
   return `
   <div class="group-card${checkedCount>0||naChecked?' has-items':''}" data-custkey="${custKey}">
     <button class="group-header" onclick="toggleGroup('${custKey}')">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0;overflow:hidden;">
         <span style="color:var(--muted-fg);flex:none;">${exp ? ICONS.up : ICONS.down}</span>
         <span class="group-label">${esc(label)}</span>
         ${showBadge ? `<span class="group-badge">${checkedCount} ✓</span>` : ''}
@@ -1353,10 +1354,25 @@ function switchRoom(i) {
 function toggleGroup(custKey) {
   const scrollEl = document.getElementById('scroll-area');
   const st = scrollEl?.scrollTop || 0;
-  if (S.expandedGroups.has(custKey)) S.expandedGroups.delete(custKey);
+  const wasExpanded = S.expandedGroups.has(custKey);
+  if (wasExpanded) S.expandedGroups.delete(custKey);
   else S.expandedGroups.add(custKey);
   render();
-  requestAnimationFrame(() => document.getElementById('scroll-area')?.scrollTo(0, st));
+  requestAnimationFrame(() => {
+    const sa = document.getElementById('scroll-area');
+    if (!sa) return;
+    if (wasExpanded) {
+      sa.scrollTo(0, Math.min(st, sa.scrollHeight));
+    } else {
+      const card = sa.querySelector('[data-custkey="' + custKey + '"]');
+      if (card) {
+        const saRect = sa.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const target = sa.scrollTop + cardRect.top - saRect.top - 10;
+        sa.scrollTo({top: Math.max(0, target), behavior: 'smooth'});
+      }
+    }
+  });
 }
 
 function toggleItem(key) {
