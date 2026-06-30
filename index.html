@@ -519,10 +519,20 @@ function calcGroupTotal(instId, gid, customItems) {
   const g = GROUPS[gid];
   if (!g) return 0;
   let t = 0;
-  const allItems = [...g.items, ...(customItems||[]).map(c=>c.id)];
-  for (const iid of allItems) {
+  // Standard items — cost comes from PRICES via getPrice()
+  for (const iid of g.items) {
     if (S.deletedItems[mkKey(instId, iid)]) continue;
     t += calcLineTotal(iid, S.items[mkKey(instId, iid)]);
+  }
+  // Custom items — cost comes from the custom definition, not PRICES
+  for (const c of (customItems || [])) {
+    const key = mkKey(instId, c.id);
+    if (S.deletedItems[key]) continue;
+    const s = S.items[key];
+    if (!s?.checked) continue;
+    const qty = parseFloat(s.qty);
+    if (!qty || qty <= 0) continue;
+    t += qty * c.cost;
   }
   return t;
 }
@@ -1604,6 +1614,19 @@ function updateTotalsInPlace(changedKey) {
   if (pf) pf.style.width = `${total?Math.round(done/total*100):0}%`;
   const pl = document.querySelector('.progress-label');
   if (pl) pl.textContent = `${done}/${total} groups`;
+  // Update section tab subtotals
+  const sects = activeSections();
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    if (i >= sects.length) return;
+    const tot = calcSectionTotal(sects[i].stId);
+    let amtEl = btn.querySelector('.tab-amt');
+    if (tot > 0) {
+      if (!amtEl) { amtEl = document.createElement('span'); amtEl.className = 'tab-amt'; btn.appendChild(amtEl); }
+      amtEl.textContent = fmt$(tot);
+    } else if (amtEl) {
+      amtEl.remove();
+    }
+  });
 }
 
 // =============================================================
