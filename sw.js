@@ -1,5 +1,13 @@
-const CACHE = 'spark-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'spark-v2';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './sw.js',
+  './icon-192.png',
+  './icon-512.png',
+  './logo.png',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -22,6 +30,6 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE).then(c => c.put(e.request, clone));
       }
       return res;
-    }).catch(() => caches.match('/index.html')))
+    }).catch(() => caches.match('./index.html')))
   );
 });
