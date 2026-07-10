@@ -159,10 +159,10 @@ test('getItemMeta returns serial flag for HVAC items', () => {
   ok(getItemMeta('as-08').serial);
 });
 
-test('getItemMeta returns min for items with minimums', () => {
-  eq(getItemMeta('ig-14').min, 500);   // Front Entry Door
-  eq(getItemMeta('kt-06').min, 1050);  // Granite
-  eq(getItemMeta('ex-04').min, 500);   // Landscaping
+test('no invented price minimums — CSV is the single source of truth', () => {
+  for (const [id, p] of Object.entries(PRICES)) {
+    if (p[3]?.min !== undefined) throw new Error(`${id} has a min not present in the pricing CSV`);
+  }
 });
 
 // =============================================================================
@@ -188,13 +188,9 @@ test('basic calculation: qty × unit cost', () => {
   eq(calcLineTotal('ig-05', { checked: true, qty: '200' }), 500);
 });
 
-test('minimum cost is applied when raw total is below min', () => {
-  // Front Entry Door ig-14: $475 × 1 = $475, but min is $500
-  eq(calcLineTotal('ig-14', { checked: true, qty: '1' }), 500);
-});
-
-test('minimum NOT applied when raw total exceeds min', () => {
-  // Front Entry Door ig-14: $475 × 2 = $950, min is $500 → $950
+test('line total is exactly qty × CSV cost (no hidden minimums)', () => {
+  // Front Entry Door ig-14: $475 × 1 = $475 per the pricing CSV
+  eq(calcLineTotal('ig-14', { checked: true, qty: '1' }), 475);
   eq(calcLineTotal('ig-14', { checked: true, qty: '2' }), 950);
 });
 
@@ -245,6 +241,21 @@ test('custom items are included in group total', () => {
   S.items[mkKey(instId, custId)] = { checked: true, qty: '1', year: '' };
   // custom total = 1 × 250 = 250
   gt(calcGroupTotal(instId, 'btile', customs), 0);
+});
+
+test('calcItemTotal resolves custom item costs (partial-update path)', () => {
+  freshState();
+  const instId = 'bath_1';
+  const custId = 'custom_test_2';
+  S.customItems[`${instId}:btile`] = [{ id: custId, name: 'Niche shelf', cost: 120, unit: 'ea.' }];
+  S.items[mkKey(instId, custId)] = { checked: true, qty: '3' };
+  eq(calcItemTotal(instId, custId), 360);
+});
+
+test('calcItemTotal matches calcLineTotal for standard items', () => {
+  freshState();
+  S.items[mkKey('bath_1', 'ba-04')] = { checked: true, qty: '2' };
+  eq(calcItemTotal('bath_1', 'ba-04'), 300);
 });
 
 // =============================================================================
@@ -389,6 +400,20 @@ test('all SECTION_TYPES reference valid GROUPS', () => {
   for (const [stId, st] of Object.entries(SECTION_TYPES)) {
     for (const gid of st.groups) {
       if (!GROUPS[gid]) throw new Error(`Section ${stId} references unknown group ${gid}`);
+    }
+  }
+});
+
+test('groups within one section type never share an item id', () => {
+  // The state key is {instanceId}:{itemId} — an overlap inside one section
+  // type would double-count the cost (regression: bed_doors/closet shared ig-11/ig-12)
+  for (const [stId, st] of Object.entries(SECTION_TYPES)) {
+    const seen = new Map();
+    for (const gid of st.groups) {
+      for (const iid of GROUPS[gid].items) {
+        if (seen.has(iid)) throw new Error(`${stId}: ${iid} in both "${seen.get(iid)}" and "${gid}"`);
+        seen.set(iid, gid);
+      }
     }
   }
 });
