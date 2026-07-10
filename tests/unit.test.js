@@ -290,11 +290,7 @@ test('marking NA in a group counts it as done', () => {
   const { done: before } = calcProgress();
   S.items['NA:interior_1:flooring'] = { checked: true };
   const { done: after } = calcProgress();
-  // NA item checked: group should still not count as done via item check
-  // (NA is stored separately and NOT in the item loop for progress)
-  // progress only checks regular item keys, so NA won't increment done here
-  // — this verifies the current behavior is consistent
-  ok(after >= before); // at minimum stays same
+  eq(after, before + 1);
 });
 
 test('total equals all groups across all active sections', () => {

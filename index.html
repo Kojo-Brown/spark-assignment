@@ -591,7 +591,8 @@ function calcProgress() {
         if (!g) continue;
         const allItems = [...g.items, ...((S.customItems[`${inst.id}:${gid}`]||[]).map(c=>c.id))];
         const anyChecked = allItems.some(iid => !S.deletedItems[mkKey(inst.id,iid)] && S.items[mkKey(inst.id,iid)]?.checked);
-        if (anyChecked) done++;
+        const naChecked = S.items[`NA:${inst.id}:${gid}`]?.checked;
+        if (anyChecked || naChecked) done++;
       }
     }
   }
@@ -1398,13 +1399,29 @@ function toggleGroup(custKey) {
 }
 
 function toggleItem(key) {
-  if (!S.items[key]) S.items[key] = {checked:false, qty:'', year:''};
+  if (!S.items[key]) S.items[key] = {checked:false, qty:''};
   S.items[key].checked = !S.items[key].checked;
   if (!S.items[key].checked) S.items[key].qty = '';
+  else clearNAForItem(key); // a checked repair contradicts "no action needed"
   scheduleSave();
   render();
   if (S.items[key]?.checked) {
     setTimeout(() => document.querySelector(`[data-key="${key}"] .qty-input`)?.focus(), 50);
+  }
+}
+function clearNAForItem(key) {
+  const [instId, itemId] = parseKey(key);
+  for (const [stId, sec] of Object.entries(S.sections)) {
+    if (!sec.instances?.some(i => i.id === instId)) continue;
+    for (const gid of SECTION_TYPES[stId].groups) {
+      const inGroup = GROUPS[gid]?.items.includes(itemId)
+        || (S.customItems[`${instId}:${gid}`] || []).some(c => c.id === itemId);
+      if (inGroup) {
+        const na = S.items[`NA:${instId}:${gid}`];
+        if (na?.checked) na.checked = false;
+      }
+    }
+    return;
   }
 }
 function toggleNA(key) {

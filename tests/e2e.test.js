@@ -249,6 +249,25 @@ async function closeOverlay() {
     expectContains(total, '$', 'total still shows');
   });
 
+  await test('NA-checked group counts toward progress', async () => {
+    const doneCount = async () => parseInt((await $text('.progress-label')).split('/')[0]);
+    const before = await doneCount();
+    await ensureExpanded('Doors');
+    // Click the NA checkbox inside the Doors group specifically
+    const clicked = await page.evaluate(() => {
+      for (const card of document.querySelectorAll('.group-card')) {
+        if (card.querySelector('.group-label')?.textContent.trim() !== 'Doors') continue;
+        const na = card.querySelector('.item-check.na:not(.checked)');
+        if (na) { na.click(); return true; }
+      }
+      return false;
+    });
+    await wait(300);
+    expectTrue(clicked, 'found unchecked NA in Doors group');
+    const after = await doneCount();
+    expect(after, before + 1, `progress done: ${before} → ${after}`);
+  });
+
   // =========================================================================
   console.log('\n── Bathroom room tabs ────────────────────────────────────────────');
   // =========================================================================
