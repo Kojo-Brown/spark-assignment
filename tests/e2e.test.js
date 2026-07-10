@@ -661,6 +661,30 @@ async function closeOverlay() {
     expectTrue(swReady, 'service worker registered');
   });
 
+  // =========================================================================
+  console.log('\n── Offline mode ──────────────────────────────────────────────────');
+  // =========================================================================
+
+  await test('app and export libraries work fully offline', async () => {
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await wait(2500); // let the install-time precache finish
+    await context.setOffline(true);
+    try {
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await wait(1000);
+      const r = await page.evaluate(() => ({
+        rendered: !!document.querySelector('.hdr-total-num'),
+        xlsx: typeof XLSX !== 'undefined',
+        jszip: typeof JSZip !== 'undefined',
+      }));
+      expectTrue(r.rendered, 'app shell rendered offline');
+      expectTrue(r.xlsx, 'XLSX library available offline');
+      expectTrue(r.jszip, 'JSZip library available offline');
+    } finally {
+      await context.setOffline(false);
+    }
+  });
+
   // ── Results ───────────────────────────────────────────────────────────────
   await browser.close();
   const total = passed + failed;

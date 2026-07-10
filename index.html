@@ -6,8 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spark Estimator">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#C2451E">
 <title>Spark Estimator</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -1711,7 +1715,7 @@ function compressImage(file, maxDim=1600, q=0.82) {
 // =============================================================
 async function doExport() {
   if (typeof XLSX === 'undefined' || typeof JSZip === 'undefined') {
-    alert('Export library not loaded. Check your internet connection.');
+    showToast('Export library not loaded — reconnect once and retry');
     return;
   }
   closeOverlay();

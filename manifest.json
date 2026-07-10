@@ -1,4 +1,5 @@
 {
+  "id": "./",
   "name": "Spark Estimator",
   "short_name": "Spark",
   "description": "Mobile repair cost estimator for Spark Homes acquisition team",
