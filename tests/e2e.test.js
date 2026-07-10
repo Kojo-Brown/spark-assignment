@@ -2,7 +2,14 @@
  * E2E tests for Spark Estimator — Playwright headless Chromium
  * Run: node /path/to/tests/e2e.test.js
  */
-const { chromium } = require('/tmp/pw/node_modules/playwright');
+let chromium;
+for (const mod of ['playwright', '/tmp/pw/node_modules/playwright']) {
+  try { ({ chromium } = require(mod)); break; } catch { /* try next */ }
+}
+if (!chromium) {
+  console.error('Playwright not found — install it with: npm i playwright && npx playwright install chromium');
+  process.exit(1);
+}
 
 const URL = 'http://localhost:8787/';
 let passed = 0, failed = 0, browser, page;
