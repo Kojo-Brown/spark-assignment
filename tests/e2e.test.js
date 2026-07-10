@@ -446,6 +446,16 @@ async function closeOverlay() {
     expectContains(txt, '26 weeks', '26 weeks reflected after slide');
   });
 
+  await test('deal inputs keep focus while typing (in-place update)', async () => {
+    const inputs = await page.$$('.deal-num-input');
+    await inputs[0].click();
+    await page.keyboard.type('5');
+    await wait(200);
+    const stillFocused = await page.evaluate(() =>
+      document.activeElement?.classList?.contains('deal-num-input'));
+    expectTrue(stillFocused, 'ARV input kept focus after keystroke');
+  });
+
   // =========================================================================
   console.log('\n── Settings & price overrides ────────────────────────────────────');
   // =========================================================================

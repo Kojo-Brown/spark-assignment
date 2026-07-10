@@ -964,12 +964,12 @@ function renderSummary() {
 // =============================================================
 // RENDER - DEAL ANALYZER
 // =============================================================
-function renderDeal() {
+function calcDeal() {
   const repairs = calcGrandTotal();
   const arv     = parseFloat(S.dealARV) || 0;
   const purchase= parseFloat(S.dealPurchase) || 0;
   const weeks   = parseInt(S.dealWeeks) || 12;
-  const holdCost = Math.round(purchase * 0.015 * (weeks / 52) * 12);
+  const holdCost = Math.round(purchase * 0.015 * (weeks / 52) * 12); // 1.5% monthly
   const basis   = purchase + repairs + holdCost;
   const profit  = arv - basis;
   const roi     = basis > 0 ? (profit / basis * 100) : 0;
@@ -981,6 +981,11 @@ function renderDeal() {
   const repW  = total ? Math.min((repairs/total)*100,100) : 0;
   const holW  = total ? Math.min((holdCost/total)*100,100) : 0;
   const proW  = total && profit > 0 ? Math.min((profit/total)*100,100) : 0;
+  return {repairs, arv, purchase, weeks, holdCost, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW};
+}
+
+function renderDeal() {
+  const {repairs, weeks, holdCost, purchase, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW} = calcDeal();
 
   return `
   <div class="scroll-area" id="scroll-area">
@@ -1011,7 +1016,7 @@ function renderDeal() {
     <div class="deal-input-card" style="margin-top:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <span class="deal-label">Holding period</span>
-        <span class="mono" style="font-size:13px;font-weight:600;">${weeks} weeks · ${fmt$(holdCost)} carry</span>
+        <span class="mono" id="deal-hold-label" style="font-size:13px;font-weight:600;">${weeks} weeks · ${fmt$(holdCost)} carry</span>
       </div>
       <input type="range" min="2" max="52" value="${weeks}" oninput="updateDeal('weeks',this.value)" style="width:100%;accent-color:var(--primary);">
     </div>
@@ -1019,19 +1024,19 @@ function renderDeal() {
     <div class="sum-card" style="margin-top:10px;">
       <div class="deal-row">
         <span class="deal-row-label">Purchase price</span>
-        <span class="deal-row-val mono">${fmt$(purchase)}</span>
+        <span class="deal-row-val mono" id="deal-v-purchase">${fmt$(purchase)}</span>
       </div>
       <div class="deal-row" style="border-top:1px solid var(--border);">
         <span class="deal-row-label">Repairs (this estimate)</span>
         <span class="deal-row-val mono txt-primary">${fmt$(repairs)}</span>
       </div>
       <div class="deal-row" style="border-top:1px solid var(--border);">
-        <span class="deal-row-label">Holding & carry (${weeks}w)</span>
-        <span class="deal-row-val mono">${fmt$(holdCost)}</span>
+        <span class="deal-row-label" id="deal-v-carry-label">Holding & carry (${weeks}w)</span>
+        <span class="deal-row-val mono" id="deal-v-carry">${fmt$(holdCost)}</span>
       </div>
       <div class="deal-row" style="border-top:1px solid var(--border);background:var(--muted2);">
         <span style="font-size:13px;font-weight:700;">Total cost basis</span>
-        <span class="deal-row-val mono" style="font-weight:700;">${fmt$(basis)}</span>
+        <span class="deal-row-val mono" id="deal-v-basis" style="font-weight:700;">${fmt$(basis)}</span>
       </div>
     </div>
 
@@ -1039,18 +1044,18 @@ function renderDeal() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
           <p style="margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-fg);">Projected profit</p>
-          <p class="mono" style="margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.5px;color:${profitColor};">${fmt$(profit)}</p>
+          <p class="mono" id="deal-profit" style="margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.5px;color:${profitColor};">${fmt$(profit)}</p>
         </div>
         <div style="text-align:right;">
-          <span style="font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:${vColor}20;color:${vColor};">${verdict}</span>
-          <p style="margin:8px 0 0;font-size:13px;color:var(--muted-fg);">ROI <span class="mono" style="font-weight:700;color:${profitColor};">${roi.toFixed(1)}%</span></p>
+          <span id="deal-verdict" style="font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:color-mix(in srgb,${vColor} 14%,transparent);color:${vColor};">${verdict}</span>
+          <p style="margin:8px 0 0;font-size:13px;color:var(--muted-fg);">ROI <span class="mono" id="deal-roi" style="font-weight:700;color:${profitColor};">${roi.toFixed(1)}%</span></p>
         </div>
       </div>
       <div style="margin-top:14px;display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--muted);">
-        <div style="width:${purW}%;background:#71717a;transition:width .4s;"></div>
-        <div style="width:${repW}%;background:var(--primary);transition:width .4s;"></div>
-        <div style="width:${holW}%;background:#a1a1aa;transition:width .4s;"></div>
-        <div style="width:${proW}%;background:var(--good);transition:width .4s;"></div>
+        <div id="deal-bar-pur" style="width:${purW}%;background:#71717a;transition:width .4s;"></div>
+        <div id="deal-bar-rep" style="width:${repW}%;background:var(--primary);transition:width .4s;"></div>
+        <div id="deal-bar-hol" style="width:${holW}%;background:#a1a1aa;transition:width .4s;"></div>
+        <div id="deal-bar-pro" style="width:${proW}%;background:var(--good);transition:width .4s;"></div>
       </div>
       <div style="margin-top:9px;display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted-fg);">
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:#71717a;display:inline-block;"></span>Purchase</span>
@@ -1162,13 +1167,13 @@ function renderRoomsSheet() {
   </div>`;
 }
 
-function renderSettingsSheet() {
+function renderPriceRows() {
   const allItems = Object.entries(PRICES).map(([id, p]) => ({id, name:p[0], unit:p[2]}));
   const q = S.priceSearch.toLowerCase();
   const filtered = q ? allItems.filter(it => it.name.toLowerCase().includes(q)) : allItems;
   const prices = S.priceScope === 'project' ? S.projPrices : S.globalPrices;
 
-  const rows = filtered.map(it => {
+  return filtered.map(it => {
     const baseVal = (S.priceScope==='project' ? S.globalPrices[it.id] : null) ?? PRICES[it.id]?.[1] ?? 0;
     const curVal = prices[it.id] ?? baseVal;
     return `
@@ -1179,11 +1184,13 @@ function renderSettingsSheet() {
       </div>
       <div class="price-input-wrap">
         <span class="price-dollar mono">$</span>
-        <input class="price-input" type="number" step="0.01" value="${curVal}" oninput="updatePrice('${it.id}',this.value,'${S.priceScope}')">
+        <input class="price-input" type="number" step="0.01" min="0" value="${curVal}" oninput="updatePrice('${it.id}',this.value,'${S.priceScope}')">
       </div>
     </div>`;
   }).join('');
+}
 
+function renderSettingsSheet() {
   const activeTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:var(--card);border:none;cursor:pointer;box-shadow:var(--shadow);color:var(--fg);`;
   const inactiveTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);`;
   const projStyle = (scope) => scope===S.priceScope ? activeTabStyle : inactiveTabStyle;
@@ -1207,7 +1214,7 @@ function renderSettingsSheet() {
       </div>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 16px;">
-      ${rows}
+      <div id="price-rows">${renderPriceRows()}</div>
       <div style="height:8px;"></div>
     </div>
     <div style="padding:12px 16px calc(12px + var(--pb-safe));border-top:1px solid var(--border);">
@@ -1453,15 +1460,41 @@ function updateDeal(field, val) {
   if (field==='purchase') S.dealPurchase = val;
   if (field==='weeks')    S.dealWeeks = parseInt(val)||12;
   scheduleSave();
-  const scrollEl = document.getElementById('scroll-area');
-  const st = scrollEl?.scrollTop || 0;
-  render();
-  requestAnimationFrame(() => document.getElementById('scroll-area')?.scrollTo(0, st));
+  updateDealInPlace();
+}
+
+// Patch only the computed numbers — no re-render, so inputs keep focus and
+// the holding-period slider stays smooth on slow devices.
+function updateDealInPlace() {
+  const d = calcDeal();
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('deal-hold-label', `${d.weeks} weeks · ${fmt$(d.holdCost)} carry`);
+  set('deal-v-purchase', fmt$(d.purchase));
+  set('deal-v-carry-label', `Holding & carry (${d.weeks}w)`);
+  set('deal-v-carry', fmt$(d.holdCost));
+  set('deal-v-basis', fmt$(d.basis));
+  set('deal-roi', `${d.roi.toFixed(1)}%`);
+  const profitEl = document.getElementById('deal-profit');
+  if (profitEl) { profitEl.textContent = fmt$(d.profit); profitEl.style.color = d.profitColor; }
+  const roiEl = document.getElementById('deal-roi');
+  if (roiEl) roiEl.style.color = d.profitColor;
+  const vEl = document.getElementById('deal-verdict');
+  if (vEl) { vEl.textContent = d.verdict; vEl.style.background = `color-mix(in srgb,${d.vColor} 14%,transparent)`; vEl.style.color = d.vColor; }
+  const widths = {pur:d.purW, rep:d.repW, hol:d.holW, pro:d.proW};
+  for (const [seg, w] of Object.entries(widths)) {
+    const el = document.getElementById(`deal-bar-${seg}`);
+    if (el) el.style.width = `${w}%`;
+  }
 }
 
 // Price editing
 function setPriceScope(s) { S.priceScope = s; render(); }
-function updatePriceSearch(v) { S.priceSearch = v; render(); }
+function updatePriceSearch(v) {
+  S.priceSearch = v;
+  // Patch only the list so the search input keeps focus while typing
+  const el = document.getElementById('price-rows');
+  if (el) el.innerHTML = renderPriceRows(); else render();
+}
 function updatePrice(id, val, scope) {
   const n = parseFloat(val);
   if (isNaN(n) || n < 0) return;
