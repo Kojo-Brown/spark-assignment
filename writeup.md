@@ -17,17 +17,15 @@ The UX implication: agents can add and remove rooms freely mid-walkthrough becau
 
 ## 2. What Is Broken or Fragile
 
-**Photo storage hits localStorage limits fast.** Photos are compressed and stored as base64 strings in `localStorage`. A single compressed JPEG is ~80–120KB. Ten photos across a walkthrough can push toward the 5MB limit on Safari. The export catches a failed write and retries without photos, but the error is silent unless the agent notices the thumbnail didn't save. A real fix is IndexedDB for binary blobs.
+**Photo storage hits localStorage limits fast.** Photos are compressed and stored as base64 strings in `localStorage`. A single compressed JPEG is ~80–120KB. Ten photos across a walkthrough can push toward the 5MB limit on Safari. The app now warns the agent with a toast when a save has to drop photos, but the durable fix is IndexedDB for binary blobs.
 
-**Service worker caches the first version aggressively.** After the first install, Safari will serve the cached `index.html` until the service worker's `CACHE` key changes. Deploying a bug fix requires bumping the cache version string — easy to forget. A content-hash in the key would make this automatic.
+**Serial OCR is best-effort.** The Tesseract pass runs on the compressed photo and appliance labels vary wildly — glare, curved surfaces, and dot-matrix prints defeat it. The regex prefers explicit "S/N:" prefixes and falls back to the longest alphanumeric run, so false positives are possible. Every detected serial is therefore shown as an editable badge rather than trusted silently, and the first scan needs a network connection to fetch the OCR engine.
 
-**Qty input triggers a full re-render on Deal Analyzer.** The Deal Analyzer's holding-period slider fires `oninput`, which re-renders the entire view on every tick. On slower Android devices this is visibly sluggish. The right fix is the same partial-update approach used for qty inputs — patch only the affected numbers in place.
-
-**No input validation on custom line items.** A user can add a custom item with a $0 cost or an empty name and it will silently appear in the group. It exports as a $0 row. Should be blocked at the modal level.
+**The render model is rebuild-by-default.** Checking an item regenerates the whole view. It's fast at this DOM size and the hot paths (qty typing, Deal Analyzer, price search) are patched in place, but a much larger price list would eventually need keyed diffing.
 
 ---
 
-## 3. Creative Addition — Deal Analyzer
+## 3. Creative Additions — Deal Analyzer & Serial OCR
 
 The Deal Analyzer is a live profit calculator embedded in a third tab alongside the walkthrough and summary.
 
@@ -37,13 +35,15 @@ The Deal Analyzer is a live profit calculator embedded in a third tab alongside 
 
 **The practical value:** Agents currently have to leave the property, open a spreadsheet, and run the math later. With the Deal Analyzer, a go/no-go decision happens before they walk out the door — while the property context is still fresh. The repair estimate feeds it automatically; they only type two numbers.
 
+**Serial number OCR** (the "significant plus" from the brief): when an agent photographs a furnace or water heater label, the app lazy-loads Tesseract.js, OCRs the photo in-browser, and extracts the serial number — preferring explicit "S/N:" prefixes, falling back to the longest alphanumeric run. The result appears as a tappable, editable badge; serials flow into the Excel export as a dedicated table and into photo filenames. No server, and after the first use the OCR engine is cached for offline work.
+
 ---
 
 ## 4. What I'd Ship Next (Two More Days)
 
-**Day 1 — Serial number OCR.** The brief calls this out as a significant plus. I'd pipe captured photos through Tesseract.js (runs fully in-browser, no server) and attempt to extract the serial number text, surfacing it as an editable field next to the photo thumbnail. HVAC equipment and water heaters have predictable label formats; a light regex pass would catch most of them.
+**Day 1 — IndexedDB photo storage + per-group notes.** Move photo blobs out of `localStorage` into IndexedDB so a full walkthrough (30+ photos) never hits the quota, with the same export path. Add a free-text notes field to each group for flagging things that don't fit a line item (e.g., "previous water damage visible under sink").
 
-**Day 2 — Shareable export link + per-group notes.** Right now the only output is a ZIP download. I'd add a "Copy share link" button that encodes the full project state as a compressed, base64-encoded URL fragment — no server required, just `LZString` compression. The recipient opens the link and sees a read-only summary. I'd also add a free-text notes field to each group for flagging things that don't fit a line item (e.g., "previous water damage visible under sink").
+**Day 2 — Shareable export link.** Right now the only output is a ZIP download. I'd add a "Copy share link" button that encodes the full project state as a compressed, base64-encoded URL fragment — no server required, just `LZString` compression. The recipient opens the link and sees a read-only summary they can open in the same app.
 
 ---
 

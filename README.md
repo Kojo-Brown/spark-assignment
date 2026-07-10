@@ -38,17 +38,20 @@ Then visit `http://localhost:8080`.
 - Delete any existing line item from any group (per-project)
 - Add custom line items to any group with a name, unit cost, and unit type
 
-### Photo Capture
+### Photo Capture & Serial Numbers
 - Attach photos to any serial-number item (Furnace, A/C, Water Heater, Fridge, etc.)
 - Camera trigger works on Android (file input + capture attribute) and iOS
 - Photos are compressed before storage to stay within `localStorage` limits
 - Each photo can be removed individually
+- **Serial number capture** — after a photo is taken the app runs a best-effort OCR pass (Tesseract.js, lazy-loaded) and extracts the serial number; a tappable badge shows the result and can be edited or entered manually at any time. Serials are included in the Excel export and in photo filenames.
 
 ### Export
 - **ZIP download** containing an Excel `.xlsx` cost breakdown and all walkthrough photos
-- Excel file: every checked item, quantity, unit cost, line total, section subtotals, and grand total
+- Excel file: every checked item, quantity, unit cost, line total, section subtotals, grand total, and a captured serial-numbers table
+- Photo filenames include the room, item name, and serial number for easy triage
 - If no photos, exports a standalone `.xlsx` directly
 - Formatted with color-coded section headers, styled columns, and grand total row
+- Works fully offline — the export libraries are precached by the service worker
 
 ### Deal Analyzer (Creative Addition)
 A built-in profit calculator that pulls the live repair total from the walkthrough and lets agents estimate the deal's margin before they leave the driveway:
@@ -58,8 +61,9 @@ A built-in profit calculator that pulls the live repair total from the walkthrou
 - Stacked cost bar showing purchase / repairs / carry / profit breakdown
 
 ### PWA
-- Service worker for full offline support
-- Web app manifest — installable to home screen on Android and iOS
+- Service worker with stale-while-revalidate caching — full offline support, and deployed fixes reach installed devices on the next launch
+- CDN libraries (xlsx, JSZip, fonts) are precached so export works offline
+- Web app manifest + apple-touch-icon — installable to home screen on Android and iOS
 - Dark mode (auto-detects system preference, toggle in header)
 - Smooth slide-in panel and bottom-sheet modals
 
@@ -71,6 +75,7 @@ All loaded via CDN — no build step required:
 |---------|---------|
 | [xlsx-js-style](https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/) | Formatted Excel export |
 | [JSZip](https://cdn.jsdelivr.net/npm/jszip@3.10.1/) | Bundle Excel + photos into ZIP |
+| [Tesseract.js](https://github.com/naptha/tesseract.js) | Serial number OCR (lazy-loaded on first photo) |
 | [Geist](https://fonts.google.com/specimen/Geist) | Typography (Google Fonts) |
 
 ## File Structure
@@ -80,14 +85,29 @@ spark-assignment/
 ├── index.html      # Complete app — single self-contained file
 ├── manifest.json   # PWA manifest
 ├── sw.js           # Service worker (offline support)
+├── tests/
+│   ├── unit.test.js   # Pure-logic tests (node tests/unit.test.js)
+│   └── e2e.test.js    # Playwright browser tests
 └── README.md
+```
+
+## Testing
+
+```bash
+# Unit tests — no dependencies
+node tests/unit.test.js
+
+# E2E tests — needs Playwright and a local server on :8787
+npm i playwright && npx playwright install chromium
+python3 -m http.server 8787 &
+node tests/e2e.test.js
 ```
 
 ## Design Decisions
 
 **Single-file first.** All logic, styles, and data live in `index.html`. The service worker and manifest are the only additional files because the browser requires them to be separate for PWA installation.
 
-**No framework.** Vanilla JS with string-template rendering. The state object is mutated directly; `render()` regenerates the DOM from scratch on each state change, except for quantity inputs where `updateTotalsInPlace()` patches only the affected totals to avoid focus-loss.
+**No framework.** Vanilla JS with string-template rendering. The state object is mutated directly; `render()` regenerates the DOM from scratch on each state change, except for hot paths — quantity inputs, the Deal Analyzer, and the price search — which patch only the affected DOM nodes so inputs never lose focus and sliders stay smooth.
 
 **Per-instance state keys.** Every item is stored as `${instanceId}:${itemId}` in the items map. This means the same repair item (e.g., vinyl plank flooring) can be independently tracked across Bathroom 1, Bathroom 2, Bedroom 1, etc. without any key collisions.
 
