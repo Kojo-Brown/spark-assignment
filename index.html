@@ -53,7 +53,7 @@ input[type=number]{-moz-appearance:textfield;}
   --shadow-lg:0 8px 40px rgba(0,0,0,.5);
 }
 
-#root{display:flex;flex-direction:column;height:100dvh;height:100vh;overflow:hidden;background:var(--muted2);}
+#root{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;background:var(--muted2);}
 
 /* Header */
 .hdr{background:var(--card);border-bottom:1px solid var(--border);flex:none;padding-top:var(--pt-safe);}
@@ -117,10 +117,10 @@ input[type=number]{-moz-appearance:textfield;}
 /* Qty row */
 .qty-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
 .qty-label{font-size:12px;color:var(--muted-fg);}
-.qty-input{width:96px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:9px;padding:8px 10px;font-size:15px;font-family:'Geist Mono',monospace;text-align:right;outline:none;transition:border-color .15s;}
+.qty-input{width:96px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:9px;padding:8px 10px;font-size:16px;font-family:'Geist Mono',monospace;text-align:right;outline:none;transition:border-color .15s;}
 .qty-input:focus{border-color:var(--primary);}
 .qty-unit{font-size:12px;color:var(--muted-fg);}
-.qty-del{background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.45;padding:2px;margin-left:auto;display:flex;align-items:center;}
+.qty-del{flex:none;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.45;padding:4px;display:flex;align-items:center;justify-content:center;}
 
 /* Photos */
 .photos-section{margin-top:11px;padding-top:11px;border-top:1px dashed var(--border);}
@@ -143,14 +143,18 @@ input[type=number]{-moz-appearance:textfield;}
 .nav-btn span{font-size:10.5px;font-weight:600;}
 
 /* Overlays */
-.overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;}
-.panel-slide{position:fixed;top:0;left:0;height:100%;width:290px;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
-.panel-slide.open{transform:translateX(0);}
-.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:24px;border-top-right-radius:24px;z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);max-height:82vh;}
+.overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.panel-slide{position:fixed;top:0;left:0;height:100%;width:290px;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(-100%);}
+.panel-slide.open{transform:translateX(0);animation:panelIn .28s cubic-bezier(.4,0,.2,1);}
+@keyframes panelIn{from{transform:translateX(-100%);}to{transform:translateX(0);}}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:24px;border-top-right-radius:24px;z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);max-height:82vh;animation:sheetIn .3s cubic-bezier(.32,.72,0,1);}
+@keyframes sheetIn{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .sheet-handle{display:flex;justify-content:center;padding:10px 0 4px;}
 .sheet-handle-bar{width:38px;height:4px;border-radius:99px;background:var(--border);}
 .center-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;}
-.modal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;width:100%;max-width:320px;box-shadow:var(--shadow-lg);}
+.modal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;width:100%;max-width:320px;box-shadow:var(--shadow-lg);animation:modalIn .22s cubic-bezier(.32,.72,0,1);}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
 
 /* Summary */
 .sum-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
@@ -176,7 +180,7 @@ input[type=number]{-moz-appearance:textfield;}
 .price-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
 .price-input-wrap{display:flex;align-items:center;gap:3px;border:1px solid var(--input-border);border-radius:9px;padding:6px 9px;background:var(--bg);}
 .price-dollar{font-size:13px;color:var(--muted-fg);}
-.price-input{width:64px;border:none;background:transparent;color:var(--fg);font-size:13.5px;font-family:'Geist Mono',monospace;text-align:right;outline:none;}
+.price-input{width:76px;border:none;background:transparent;color:var(--fg);font-size:16px;font-family:'Geist Mono',monospace;text-align:right;outline:none;}
 
 /* Projects list */
 .proj-row{display:flex;align-items:center;border-bottom:1px solid var(--border);}
@@ -190,7 +194,9 @@ input[type=number]{-moz-appearance:textfield;}
 .btn-danger{width:100%;padding:11px;border-radius:11px;background:transparent;border:1px solid #fecaca;color:#ef4444;font-size:13.5px;font-weight:600;cursor:pointer;}
 
 /* Toast */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;font-weight:600;padding:10px 18px;border-radius:11px;box-shadow:var(--shadow-lg);z-index:90;white-space:nowrap;pointer-events:none;transition:opacity .3s;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;font-weight:600;padding:10px 18px;border-radius:11px;box-shadow:var(--shadow-lg);z-index:90;white-space:nowrap;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;gap:12px;}
+.toast.has-action{pointer-events:auto;}
+.toast-action{background:transparent;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:.04em;}
 
 /* Icon helpers */
 .icon{display:block;flex-shrink:0;}
@@ -417,7 +423,13 @@ function loadAllProjects() {
 }
 function saveAllProjects(list) {
   try { localStorage.setItem(SK, JSON.stringify(list)); } catch {
-    try { localStorage.setItem(SK, JSON.stringify(list.map(p => ({...p, photos: {}}) ))); } catch {}
+    // Quota exceeded — retry without photos so the estimate itself survives
+    try {
+      localStorage.setItem(SK, JSON.stringify(list.map(p => ({...p, photos: {}}) )));
+      showToast('Storage full — photos could not be saved');
+    } catch {
+      showToast('Storage full — could not save project');
+    }
   }
 }
 
@@ -440,6 +452,7 @@ function projectSnap() {
 
 function saveCurrentProject() {
   if (!S.projectId) return;
+  clearTimeout(_saveTimer);
   const list = loadAllProjects();
   const snap = projectSnap();
   const idx = list.findIndex(p => p.id === S.projectId);
@@ -490,7 +503,7 @@ function ensureItemKeys() {
         if (!g) continue;
         for (const iid of g.items) {
           const key = mkKey(inst.id, iid);
-          if (!S.items[key]) S.items[key] = {checked:false, qty:'', year:''};
+          if (!S.items[key]) S.items[key] = {checked:false, qty:''};
         }
       }
     }
@@ -722,9 +735,10 @@ function renderRoomTabs(stId) {
     ${insts.map((inst, i) => {
       const tot = calcInstanceTotal(stId, inst.id);
       const active = i === S.roomIdx;
+      const minKeep = stId === 'bathroom' ? 1 : 0;
       return `<div class="rtab">
         <button class="rtab-btn${active?' active':''}" onclick="switchRoom(${i})">${esc(inst.name)}${tot>0?` <span style="font-size:11px;opacity:.85">${fmt$(tot)}</span>`:''}</button>
-        ${insts.length > 1 ? `<button class="rtab-remove" onclick="removeRoom('${stId}',${i})">${ICONS.close}</button>` : ''}
+        ${insts.length > minKeep ? `<button class="rtab-remove" onclick="removeRoom('${stId}',${i})" aria-label="Remove ${esc(inst.name)}">${ICONS.close}</button>` : ''}
       </div>`;
     }).join('')}
     <button class="rtab-add" onclick="addRoom('${stId}')">+ Add</button>
@@ -737,7 +751,7 @@ function renderRoomTabs(stId) {
 function renderItem(instId, itemId, isCustom, custDef) {
   const key = mkKey(instId, itemId);
   if (S.deletedItems[key]) return '';
-  const s = S.items[key] || {checked:false, qty:'', year:''};
+  const s = S.items[key] || {checked:false, qty:''};
 
   let name, unit, cost, flags;
   if (isCustom && custDef) {
@@ -1443,7 +1457,7 @@ function toggleNA(key) {
 }
 
 function updateQty(key, val) {
-  if (!S.items[key]) S.items[key] = {checked:true, qty:'', year:''};
+  if (!S.items[key]) S.items[key] = {checked:true, qty:''};
   S.items[key].qty = val;
   scheduleSave();
   updateTotalsInPlace(key);
@@ -1453,6 +1467,11 @@ function deleteItem(key) {
   S.deletedItems[key] = true;
   scheduleSave();
   render();
+  showToast('Item removed', {label:'Undo', fn:() => {
+    delete S.deletedItems[key];
+    scheduleSave();
+    render();
+  }});
 }
 
 function updateDeal(field, val) {
@@ -1634,7 +1653,7 @@ function addRoom(stId) {
     if (!g) continue;
     for (const iid of g.items) {
       const key = mkKey(id, iid);
-      if (!S.items[key]) S.items[key] = {checked:false, qty:'', year:''};
+      if (!S.items[key]) S.items[key] = {checked:false, qty:''};
     }
   }
   scheduleSave();
@@ -1770,7 +1789,6 @@ async function doExport() {
     if (fmt) ws[addr].z = fmt;
   };
   const merge = (r, c1, c2) => merges.push({s:{r, c:c1}, e:{r, c:c2}});
-  const col = (r, c, v, stl, fmt) => { cell(r,c,v,stl,fmt); };
 
   // Title
   cell(row,0,'SPARK HOMES — REPAIR ESTIMATE', s({bold:true,sz:14,color:{rgb:'FFFFFF'}},'111827',{horizontal:'center',vertical:'center'}));
@@ -1875,14 +1893,23 @@ async function doExport() {
 // =============================================================
 // TOAST
 // =============================================================
-let _toastTimer;
-function showToast(msg) {
+let _toastTimer, _toastAction = null;
+function showToast(msg, action) {
   let el = document.getElementById('toast');
-  if (!el) { el = document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el); }
-  el.textContent = msg;
+  if (!el) { el = document.createElement('div'); el.id='toast'; document.body.appendChild(el); }
+  _toastAction = action?.fn || null;
+  el.className = action ? 'toast has-action' : 'toast';
+  el.innerHTML = esc(msg) + (action ? `<button class="toast-action" onclick="runToastAction()">${esc(action.label)}</button>` : '');
   el.style.opacity = '1';
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => { if (el) el.style.opacity='0'; }, 2000);
+  _toastTimer = setTimeout(() => { if (el) { el.style.opacity='0'; el.className='toast'; } }, action ? 4000 : 2000);
+}
+function runToastAction() {
+  const fn = _toastAction;
+  _toastAction = null;
+  const el = document.getElementById('toast');
+  if (el) { el.style.opacity='0'; el.className='toast'; }
+  if (fn) fn();
 }
 
 // =============================================================
@@ -1901,7 +1928,8 @@ function showToast(msg) {
     saveCurrentProject();
   }
   render();
-  window.addEventListener('visibilitychange', () => { if (document.hidden) saveCurrentProject(); });
+  // visibilitychange fires on document (it does not reach window in Safari)
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveCurrentProject(); });
   window.addEventListener('pagehide', saveCurrentProject);
 })();
 </script>

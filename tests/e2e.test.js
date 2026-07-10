@@ -571,6 +571,28 @@ async function closeOverlay() {
     expectTrue(countAfter < countBefore, 'item count decreased after delete');
   });
 
+  await test('Undo toast restores a deleted item', async () => {
+    const countBefore = (await page.$$('.item-row')).length;
+    const undo = await page.$('.toast-action');
+    expectTrue(undo, 'undo button visible in toast');
+    await undo.click();
+    await wait(300);
+    const countAfter = (await page.$$('.item-row')).length;
+    expectTrue(countAfter > countBefore, `item restored: ${countBefore} → ${countAfter}`);
+  });
+
+  await test('custom item with $0 cost is rejected', async () => {
+    await (await page.$('.add-item-btn')).click();
+    await wait(300);
+    await (await page.$('#draft-name')).fill('Free thing');
+    await (await page.$('#draft-cost')).fill('0');
+    await page.click('button[onclick="confirmAddItem()"]');
+    await wait(300);
+    // Modal should still be open (item rejected)
+    expectTrue(await page.$('#draft-name'), 'modal still open after invalid submit');
+    await closeOverlay();
+  });
+
   // =========================================================================
   console.log('\n── Dark mode ─────────────────────────────────────────────────────');
   // =========================================================================
