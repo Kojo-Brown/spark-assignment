@@ -126,7 +126,8 @@ input[type=number]{-moz-appearance:textfield;}
 .photos-section{margin-top:11px;padding-top:11px;border-top:1px dashed var(--border);}
 .photos-header{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
 .photos-label{font-size:11px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.08em;}
-.serial-badge{margin-left:auto;font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;background:var(--good-soft);color:var(--good);padding:2px 8px;border-radius:6px;}
+.serial-badge{margin-left:auto;font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;background:var(--good-soft);color:var(--good);padding:2px 8px;border-radius:6px;border:none;cursor:pointer;}
+.serial-add{margin-left:auto;font-size:11px;font-weight:600;background:transparent;color:var(--muted-fg);padding:2px 8px;border-radius:6px;border:1px dashed var(--border);cursor:pointer;white-space:nowrap;}
 .photos-grid{display:flex;gap:8px;flex-wrap:wrap;}
 .photo-thumb{position:relative;flex:none;}
 .photo-img{width:62px;height:62px;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block;}
@@ -394,8 +395,9 @@ let S = {
   projectName: 'New Estimate',
   // sections: { [sectionType]: { instances: [{id, name}] } }
   sections: {},
-  items: {},         // { [stateKey]: {checked, qty, year} }
-  photos: {},        // { [stateKey]: [{dataUrl}] }
+  items: {},         // { [stateKey]: {checked, qty} }
+  photos: {},        // { [stateKey]: [{dataUrl, name}] }
+  serials: {},       // { [stateKey]: 'ABC123' } captured serial numbers
   customItems: {},   // { [groupStateKey]: [{id, name, cost, unit}] }
   deletedItems: {},  // { [stateKey]: true }
   projPrices: {},    // { [itemId]: cost }  per-project overrides
@@ -441,6 +443,7 @@ function projectSnap() {
     sections: S.sections,
     items: S.items,
     photos: S.photos,
+    serials: S.serials,
     customItems: S.customItems,
     deletedItems: S.deletedItems,
     projPrices: S.projPrices,
@@ -472,6 +475,7 @@ function loadProjectIntoState(proj) {
   S.sections    = proj.sections    || defaultSections();
   S.items       = proj.items       || {};
   S.photos      = proj.photos      || {};
+  S.serials     = proj.serials     || {};
   S.customItems = proj.customItems || {};
   S.deletedItems= proj.deletedItems|| {};
   S.projPrices  = proj.projPrices  || {};
@@ -820,11 +824,15 @@ function renderNAItem(instId, gid) {
 // =============================================================
 function renderPhotos(key) {
   const photos = S.photos[key] || [];
+  const serial = S.serials[key];
   return `
   <div class="photos-section">
     <div class="photos-header">
       ${ICONS.cam}
       <span class="photos-label">Serial photo</span>
+      ${serial
+        ? `<button class="serial-badge" onclick="editSerial('${key}')" title="Edit serial number">SN ${esc(serial)}</button>`
+        : `<button class="serial-add" onclick="editSerial('${key}')">+ serial no.</button>`}
     </div>
     <div class="photos-grid">
       ${photos.map((ph,i) => `
@@ -1563,12 +1571,15 @@ function addPhoto(key) {
     document.body.removeChild(input);
     if (!input.files?.length) return;
     if (!S.photos[key]) S.photos[key] = [];
+    let lastUrl = null;
     for (const file of input.files) {
       const dataUrl = await compressImage(file);
       S.photos[key].push({dataUrl, name: file.name});
+      lastUrl = dataUrl;
     }
     scheduleSave();
     render();
+    if (lastUrl && !S.serials[key]) scanSerial(key, lastUrl);
   };
   input.click();
 }
@@ -1576,6 +1587,63 @@ function removePhoto(key, idx) {
   S.photos[key]?.splice(idx, 1);
   scheduleSave();
   render();
+}
+
+// =============================================================
+// SERIAL NUMBER CAPTURE — manual entry + best-effort OCR scan
+// =============================================================
+function editSerial(key) {
+  showPromptModal('Serial number', 'e.g. 4820A77', S.serials[key] || '', val => {
+    // Strip any typed "S/N" prefix — the badge already labels it
+    S.serials[key] = val.toUpperCase().replace(/^S\/?N[-:#.\s]*/,'');
+    scheduleSave();
+    render();
+  });
+}
+
+let _tessPromise = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (!_tessPromise) _tessPromise = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    sc.onload = () => res(window.Tesseract);
+    sc.onerror = () => { _tessPromise = null; rej(new Error('offline')); };
+    document.head.appendChild(sc);
+  });
+  return _tessPromise;
+}
+
+// Pull the most serial-looking token out of OCR text. Label formats vary, so
+// prefer an explicit "S/N:" prefix, then fall back to long alphanumeric runs.
+function extractSerial(text) {
+  const up = String(text || '').toUpperCase();
+  const tagged = up.match(/\b(?:S\/?N|SER(?:IAL)?\.?\s*(?:NO|NUM|#)?)[:.#\s]*([A-Z0-9][A-Z0-9\-]{4,})/);
+  if (tagged) return tagged[1];
+  const tokens = up.match(/\b[A-Z0-9][A-Z0-9\-]{6,}\b/g) || [];
+  const cands = tokens.filter(t => (/\d/.test(t) && /[A-Z]/.test(t)) || /^[\d\-]{8,}$/.test(t));
+  cands.sort((a, b) => b.length - a.length);
+  return cands[0] || null;
+}
+
+async function scanSerial(key, dataUrl) {
+  try {
+    showToast('Scanning photo for serial…');
+    const T = await loadTesseract();
+    const {data} = await T.recognize(dataUrl, 'eng');
+    const serial = extractSerial(data?.text);
+    if (S.serials[key]) return; // user typed one while we were scanning
+    if (serial) {
+      S.serials[key] = serial;
+      scheduleSave();
+      if (!S.overlay) render();
+      showToast(`Serial detected: ${serial}`, {label:'Edit', fn:() => editSerial(key)});
+    } else {
+      showToast('No serial found — tap “+ serial no.” to add it');
+    }
+  } catch {
+    // OCR unavailable (offline / CDN blocked) — manual entry still works
+  }
 }
 
 // Project management
@@ -1614,7 +1682,7 @@ function newProject() {
     S.projectId = `proj_${Date.now()}`;
     S.projectName = name;
     S.sections = defaultSections();
-    S.items = {}; S.photos = {}; S.customItems = {}; S.deletedItems = {};
+    S.items = {}; S.photos = {}; S.serials = {}; S.customItems = {}; S.deletedItems = {};
     S.projPrices = {}; S.dealARV = ''; S.dealPurchase = ''; S.dealWeeks = 12;
     S.sectionIdx = 0; S.roomIdx = 0; S.nav = 'walk';
     S.expandedGroups = new Set();
@@ -1635,6 +1703,13 @@ function renameProject() {
 // Room management
 function findInstance(stId, instId) {
   return S.sections[stId]?.instances?.find(i => i.id === instId) || null;
+}
+function findInstanceName(instId) {
+  for (const sec of Object.values(S.sections)) {
+    const inst = sec.instances?.find(i => i.id === instId);
+    if (inst) return inst.name;
+  }
+  return instId;
 }
 function addRoom(stId) {
   const stDef = SECTION_TYPES[stId];
@@ -1671,15 +1746,17 @@ function addRoom(stId) {
 
 function removeRoom(stId, idx) {
   const insts = S.sections[stId]?.instances || [];
-  if (insts.length <= (stId==='bathroom'?1:0)) { showToast('Cannot remove last bathroom'); return; }
+  if (stId === 'bathroom' && insts.length <= 1) { showToast('Cannot remove last bathroom'); return; }
   const inst = insts[idx];
+  if (!inst) return;
   insts.splice(idx, 1);
   // clean up item state for removed instance
   const prefix = inst.id + ':';
   for (const k of Object.keys(S.items)) { if (k.startsWith(prefix)) delete S.items[k]; }
   for (const k of Object.keys(S.photos)) { if (k.startsWith(prefix)) delete S.photos[k]; }
   for (const k of Object.keys(S.customItems)) { if (k.startsWith(prefix)) delete S.customItems[k]; }
-  S.roomIdx = Math.min(S.roomIdx, insts.length - 1);
+  for (const k of Object.keys(S.serials)) { if (k.startsWith(prefix)) delete S.serials[k]; }
+  S.roomIdx = Math.max(0, Math.min(S.roomIdx, insts.length - 1));
   scheduleSave();
   render();
 }
@@ -1853,6 +1930,24 @@ async function doExport() {
   for (let c=1;c<4;c++) cell(row,c,'',s({},'111827'));
   cell(row,4,grand, s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'111827',{horizontal:'right'}), '"$"#,##0');
 
+  // Captured serial numbers
+  const serialEntries = Object.entries(S.serials||{}).filter(([,v]) => v);
+  if (serialEntries.length) {
+    row += 2;
+    cell(row,0,'SERIAL NUMBERS', s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'374151',{vertical:'center'}));
+    for (let c=1;c<5;c++) cell(row,c,'',s({},'374151'));
+    merge(row,0,4); row++;
+    for (const [key, serial] of serialEntries) {
+      const [instId, itemId] = parseKey(key);
+      cell(row,0,getItemName(itemId), s({sz:10},'FFFFFF'));
+      cell(row,1,findInstanceName(instId), s({sz:10},'FFFFFF'));
+      cell(row,2,serial, s({sz:10,bold:true},'FFFFFF'));
+      cell(row,3,'',s({},'FFFFFF')); cell(row,4,'',s({},'FFFFFF'));
+      row++;
+    }
+    row--;
+  }
+
   ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:row,c:4}});
   ws['!cols'] = [38,16,12,10,14].map(w=>({wch:w}));
   ws['!merges'] = merges;
@@ -1872,10 +1967,12 @@ async function doExport() {
   const folder = zip.folder('photos');
   photoEntries.forEach(([key, photos]) => {
     const [instId, itemId] = parseKey(key);
-    const prefix = (getItemName(itemId) || itemId).replace(/[^a-z0-9]/gi,'_').slice(0,30);
+    const clean = (str) => String(str).replace(/[^a-z0-9]/gi,'_').slice(0,30);
+    const prefix = `${clean(findInstanceName(instId))}_${clean(getItemName(itemId) || itemId)}`;
+    const serial = S.serials[key] ? `_SN-${clean(S.serials[key])}` : '';
     photos.forEach((ph, i) => {
       const ext = (ph.dataUrl.split(';')[0].split('/')[1]||'jpg').replace('jpeg','jpg');
-      folder.file(`${prefix}_${i+1}.${ext}`, ph.dataUrl.split(',')[1], {base64:true});
+      folder.file(`${prefix}${serial}_${i+1}.${ext}`, ph.dataUrl.split(',')[1], {base64:true});
     });
   });
 
