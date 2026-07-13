@@ -4,7 +4,9 @@ A mobile-first Progressive Web App for the Spark Homes acquisition team. Agents 
 
 ## Live Demo
 
-Open `index.html` in any modern browser, or serve the folder locally:
+**▶ [kojo-brown.github.io/spark-assignment](https://kojo-brown.github.io/spark-assignment/)** — deployed on GitHub Pages, installable as a PWA.
+
+Or open `index.html` in any modern browser / serve the folder locally:
 
 ```bash
 npx serve .
