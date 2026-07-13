@@ -1,5 +1,5 @@
 # Spark Estimator — Submission Writeup
-**Kojo Brown · kojobro67@gmail.com · [Live demo](https://kojo-brown.github.io/spark-assignment/) · [github.com/Kojo-Brown/spark-assignment](https://github.com/Kojo-Brown/spark-assignment)**
+**Nicholas Brown · brown.nicholas.darko@gmail.com · [Live demo](https://kojo-brown.github.io/spark-assignment/) · [github.com/Kojo-Brown/spark-assignment](https://github.com/Kojo-Brown/spark-assignment)**
 
 ---
 
