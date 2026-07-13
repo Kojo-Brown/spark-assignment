@@ -434,6 +434,43 @@ test('fmt$ formats zero', () => eq(fmt$(0), '$0'));
 test('fmt$ formats thousands with comma', () => eq(fmt$(3500), '$3,500'));
 test('fmt$ rounds to nearest dollar', () => eq(fmt$(3500.7), '$3,501'));
 test('fmt$ handles large numbers', () => eq(fmt$(125000), '$125,000'));
+test('fmt$ formats negatives with leading minus', () => eq(fmt$(-31050), '-$31,050'));
+test('fmt$ rounds -0.4 to plain $0', () => eq(fmt$(-0.4), '$0'));
+
+// =============================================================================
+// SECTION 9b: Deal Analyzer
+// =============================================================================
+console.log('\n── Deal Analyzer ─────────────────────────────────────────────────');
+
+test('calcDeal is not ready until both ARV and purchase are entered', () => {
+  freshState();
+  S.dealARV = ''; S.dealPurchase = ''; S.dealWeeks = 12;
+  ok(!calcDeal().ready);
+  S.dealARV = '200000';
+  ok(!calcDeal().ready);
+  S.dealPurchase = '120000';
+  ok(calcDeal().ready);
+});
+
+test('calcDeal carry cost is 1.5% monthly on purchase', () => {
+  freshState();
+  S.dealARV = '200000'; S.dealPurchase = '120000'; S.dealWeeks = 26;
+  const d = calcDeal();
+  eq(d.holdCost, Math.round(120000 * 0.015 * (26 / 52) * 12)); // $10,800
+  eq(d.basis, 120000 + d.repairs + d.holdCost);
+  eq(d.profit, 200000 - d.basis);
+});
+
+test('calcDeal verdict thresholds', () => {
+  freshState();
+  S.dealWeeks = 2; S.dealPurchase = '100000';
+  S.dealARV = '200000';
+  eq(calcDeal().verdict, 'Strong deal');   // profit well above $15k
+  S.dealARV = '110000';
+  eq(calcDeal().verdict, 'Thin margin');   // small positive profit
+  S.dealARV = '90000';
+  eq(calcDeal().verdict, 'Losing deal');   // negative profit
+});
 
 // =============================================================================
 // SECTION 10: esc (HTML escaping)

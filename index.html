@@ -723,7 +723,10 @@ function calcProgress() {
 // =============================================================
 // FORMAT
 // =============================================================
-function fmt$(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmt$(n) {
+  const r = Math.round(n);
+  return (r < 0 ? '-$' : '$') + Math.abs(r).toLocaleString('en-US');
+}
 function fmtDate(iso) {
   if (!iso) return '';
   try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; }
@@ -1210,6 +1213,7 @@ function calcDeal() {
   const arv     = parseFloat(S.dealARV) || 0;
   const purchase= parseFloat(S.dealPurchase) || 0;
   const weeks   = parseInt(S.dealWeeks) || 12;
+  const ready   = arv > 0 && purchase > 0; // no verdict until both numbers are in
   const holdCost = Math.round(purchase * 0.015 * (weeks / 52) * 12); // 1.5% monthly
   const basis   = purchase + repairs + holdCost;
   const profit  = arv - basis;
@@ -1222,11 +1226,11 @@ function calcDeal() {
   const repW  = total ? Math.min((repairs/total)*100,100) : 0;
   const holW  = total ? Math.min((holdCost/total)*100,100) : 0;
   const proW  = total && profit > 0 ? Math.min((profit/total)*100,100) : 0;
-  return {repairs, arv, purchase, weeks, holdCost, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW};
+  return {repairs, arv, purchase, weeks, ready, holdCost, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW};
 }
 
 function renderDeal() {
-  const {repairs, weeks, holdCost, purchase, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW} = calcDeal();
+  const {repairs, weeks, ready, holdCost, purchase, basis, profit, roi, verdict, vColor, profitColor, purW, repW, holW, proW} = calcDeal();
 
   return `
   <div class="scroll-area" id="scroll-area">
@@ -1285,11 +1289,11 @@ function renderDeal() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
           <p style="margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-fg);">Projected profit</p>
-          <p class="mono" id="deal-profit" style="margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.5px;color:${profitColor};">${fmt$(profit)}</p>
+          <p class="mono" id="deal-profit" style="margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.5px;color:${ready?profitColor:'var(--muted-fg)'};">${ready?fmt$(profit):'—'}</p>
         </div>
         <div style="text-align:right;">
-          <span id="deal-verdict" style="font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:color-mix(in srgb,${vColor} 14%,transparent);color:${vColor};">${verdict}</span>
-          <p style="margin:8px 0 0;font-size:13px;color:var(--muted-fg);">ROI <span class="mono" id="deal-roi" style="font-weight:700;color:${profitColor};">${roi.toFixed(1)}%</span></p>
+          <span id="deal-verdict" style="font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:${ready?`color-mix(in srgb,${vColor} 14%,transparent)`:'var(--muted)'};color:${ready?vColor:'var(--muted-fg)'};">${ready?verdict:'Enter ARV & price'}</span>
+          <p style="margin:8px 0 0;font-size:13px;color:var(--muted-fg);">ROI <span class="mono" id="deal-roi" style="font-weight:700;color:${ready?profitColor:'var(--muted-fg)'};">${ready?roi.toFixed(1)+'%':'—'}</span></p>
         </div>
       </div>
       <div style="margin-top:14px;display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--muted);">
@@ -1765,13 +1769,18 @@ function updateDealInPlace() {
   set('deal-v-carry-label', `Holding & carry (${d.weeks}w)`);
   set('deal-v-carry', fmt$(d.holdCost));
   set('deal-v-basis', fmt$(d.basis));
-  set('deal-roi', `${d.roi.toFixed(1)}%`);
+  set('deal-roi', d.ready ? `${d.roi.toFixed(1)}%` : '—');
+  const neutral = 'var(--muted-fg)';
   const profitEl = document.getElementById('deal-profit');
-  if (profitEl) { profitEl.textContent = fmt$(d.profit); profitEl.style.color = d.profitColor; }
+  if (profitEl) { profitEl.textContent = d.ready ? fmt$(d.profit) : '—'; profitEl.style.color = d.ready ? d.profitColor : neutral; }
   const roiEl = document.getElementById('deal-roi');
-  if (roiEl) roiEl.style.color = d.profitColor;
+  if (roiEl) roiEl.style.color = d.ready ? d.profitColor : neutral;
   const vEl = document.getElementById('deal-verdict');
-  if (vEl) { vEl.textContent = d.verdict; vEl.style.background = `color-mix(in srgb,${d.vColor} 14%,transparent)`; vEl.style.color = d.vColor; }
+  if (vEl) {
+    vEl.textContent = d.ready ? d.verdict : 'Enter ARV & price';
+    vEl.style.background = d.ready ? `color-mix(in srgb,${d.vColor} 14%,transparent)` : 'var(--muted)';
+    vEl.style.color = d.ready ? d.vColor : neutral;
+  }
   const widths = {pur:d.purW, rep:d.repW, hol:d.holW, pro:d.proW};
   for (const [seg, w] of Object.entries(widths)) {
     const el = document.getElementById(`deal-bar-${seg}`);

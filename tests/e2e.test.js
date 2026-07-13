@@ -470,6 +470,13 @@ async function closeOverlay() {
     expectTrue(await page.$('input[type="range"]'), 'range slider');
   });
 
+  await test('deal shows neutral state before ARV/purchase entered', async () => {
+    const verdict = await $text('#deal-verdict');
+    const profit = await $text('#deal-profit');
+    expect(verdict, 'Enter ARV & price', 'neutral verdict before inputs');
+    expect(profit, '—', 'no profit figure before inputs');
+  });
+
   await test('Entering ARV + purchase calculates profit', async () => {
     // Re-query each time: render() re-creates the DOM on every oninput
     const getInput = (i) => page.$$('.deal-num-input').then(els => els[i]);
@@ -498,6 +505,18 @@ async function closeOverlay() {
     await wait(400);
     const txt = await $text('.scroll-area');
     expectContains(txt, '26 weeks', '26 weeks reflected after slide');
+  });
+
+  await test('losing deal formats negative profit as -$', async () => {
+    // ARV far below cost basis -> negative profit
+    const getInput = (i) => page.$$('.deal-num-input').then(els => els[i]);
+    await (await getInput(0)).fill('50000');
+    await wait(400);
+    const profit = await $text('#deal-profit');
+    expectTrue(profit.startsWith('-$'), `negative profit format: "${profit}"`);
+    expect(await $text('#deal-verdict'), 'Losing deal', 'losing verdict');
+    await (await getInput(0)).fill('200000'); // restore a healthy ARV
+    await wait(400);
   });
 
   await test('deal inputs keep focus while typing (in-place update)', async () => {
