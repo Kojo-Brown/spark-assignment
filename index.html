@@ -182,7 +182,18 @@ input[type=number]{-moz-appearance:textfield;}
 
 /* Overlays */
 .overlay-bg{position:fixed;inset:0;background:rgba(10,14,12,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:40;animation:fadeIn .2s ease;}
+.overlay-bg.clear{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;animation:none;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* Header menu */
+.menu-pop{position:fixed;top:calc(var(--pt-safe) + 50px);right:10px;z-index:50;min-width:215px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-lg);padding:6px;animation:menuIn .18s cubic-bezier(.32,.72,0,1);transform-origin:top right;}
+@keyframes menuIn{from{opacity:0;transform:translateY(-6px) scale(.96);}to{opacity:1;transform:none;}}
+.menu-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:none;background:transparent;color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer;border-radius:11px;text-align:left;transition:background .15s;}
+.menu-item:active{background:var(--muted);}
+.menu-item svg{color:var(--muted-fg);flex:none;}
+.menu-item.danger{color:var(--danger);}
+.menu-item.danger svg{color:var(--danger);}
+.menu-sep{height:1px;background:var(--border);margin:5px 8px;}
 .panel-slide{position:fixed;top:0;left:0;height:100%;width:320px;max-width:88vw;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(-100%);}
 .panel-slide.open{transform:translateX(0);animation:panelIn .28s cubic-bezier(.4,0,.2,1);}
 @keyframes panelIn{from{transform:translateX(-100%);}to{transform:translateX(0);}}
@@ -765,6 +776,8 @@ const ICONS = {
   checkSm:  `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   plusSm:   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
   xs:       `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  more:     `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`,
+  restart:  `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`,
   trend:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
   file:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`,
   pic:      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
@@ -777,7 +790,6 @@ function renderHeader() {
   const grand = calcGrandTotal();
   const {total, done} = calcProgress();
   const pct = total ? Math.round(done/total*100) : 0;
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   return `
   <div class="hdr">
@@ -788,9 +800,7 @@ function renderHeader() {
         <span class="brand-name"><em>Estimator</em></span>
       </div>
       <div class="hdr-actions">
-        <button class="icon-btn" onclick="openRooms()" aria-label="Manage rooms">${ICONS.rooms}</button>
-        <button class="icon-btn" onclick="openSettings()" aria-label="Price settings">${ICONS.settings}</button>
-        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">${dark ? ICONS.sun : ICONS.moon}</button>
+        <button class="icon-btn" onclick="openMenu()" aria-label="Menu">${ICONS.more}</button>
       </div>
     </div>
     <div class="hdr-total">
@@ -1587,13 +1597,13 @@ function renderPromptModal() {
         style="margin-bottom:14px;">
       <div style="display:flex;gap:10px;">
         <button class="btn-ghost" style="flex:1;" onclick="cancelPrompt()">Cancel</button>
-        <button class="btn-primary" style="flex:1.4;" onclick="confirmPrompt()">Save</button>
+        <button class="btn-primary" style="flex:1.4;" onclick="confirmPrompt()">${esc(pm.confirmLabel || 'Save')}</button>
       </div>
     </div>
   </div>`;
 }
-function showPromptModal(title, placeholder, defaultVal, callback) {
-  S.promptModal = {title, placeholder, value: defaultVal || '', callback};
+function showPromptModal(title, placeholder, defaultVal, callback, confirmLabel) {
+  S.promptModal = {title, placeholder, value: defaultVal || '', callback, confirmLabel};
   S.overlay = 'prompt';
   render();
   setTimeout(() => { const el = document.getElementById('prompt-input'); if(el){el.focus();el.select();} }, 50);
@@ -1603,8 +1613,8 @@ function confirmPrompt() {
   const cb  = S.promptModal?.callback;
   S.promptModal = null;
   S.overlay = null;
+  render(); // always dismiss the modal, even when the callback bails out (e.g. wrong confirmation text)
   if (val && cb) cb(val);
-  else render();
 }
 function cancelPrompt() {
   S.promptModal = null;
@@ -1628,6 +1638,7 @@ function render() {
   if (S.overlay === 'export')   overlay = renderExportModal();
   if (S.overlay === 'additem')  overlay = renderAddItemModal();
   if (S.overlay === 'prompt')   overlay = renderPromptModal();
+  if (S.overlay === 'menu')     overlay = renderMenu();
 
   document.getElementById('root').innerHTML =
     renderHeader() + content + renderNav() + overlay;
@@ -1925,7 +1936,35 @@ function openProjects() { S.overlay = 'projects'; S.projSearch = ''; render(); }
 function openRooms() { S.overlay = 'rooms'; render(); }
 function openSettings() { S.overlay = 'settings'; render(); }
 function openExport() { S.overlay = 'export'; render(); }
+function openMenu() { S.overlay = 'menu'; render(); }
 function closeOverlay() { S.overlay = null; render(); }
+
+// Header dropdown — one entry point for rooms, pricing, theme, and reset.
+// Theme toggle keeps the menu open so the switch is visible in place.
+function renderMenu() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return `
+  <div class="overlay-bg clear" onclick="closeOverlay()"></div>
+  <div class="menu-pop">
+    <button class="menu-item" onclick="openRooms()">${ICONS.rooms} Home &amp; rooms</button>
+    <button class="menu-item" onclick="openSettings()">${ICONS.settings} Price settings</button>
+    <button class="menu-item" onclick="toggleTheme()">${dark ? ICONS.sun : ICONS.moon} ${dark ? 'Light mode' : 'Dark mode'}</button>
+    <div class="menu-sep"></div>
+    <button class="menu-item danger" onclick="confirmClearApp()">${ICONS.restart} Clear all data</button>
+  </div>`;
+}
+
+// Wipe every project, override, and preference so the app starts afresh.
+// Guarded by typed confirmation — this is irreversible.
+function confirmClearApp() {
+  showPromptModal('Clear all data?', 'Type CLEAR to confirm', '', val => {
+    if (val.toUpperCase() !== 'CLEAR') { showToast('Cancelled'); return; }
+    clearTimeout(_saveTimer);
+    S.projectId = null; // the pagehide/visibility save hooks would otherwise re-write the wiped project
+    localStorage.clear();
+    location.reload();
+  }, 'Clear');
+}
 
 function switchProject(id) {
   saveCurrentProject();
@@ -1947,7 +1986,7 @@ function deleteProject(id) {
     if (val.toUpperCase() !== 'DELETE') { showToast('Cancelled'); return; }
     saveAllProjects(loadAllProjects().filter(p => p.id !== id));
     render();
-  });
+  }, 'Delete');
 }
 
 function newProject() {

@@ -87,6 +87,12 @@ async function closeOverlay() {
   await wait(200);
 }
 
+/** Open the header ⋮ menu (houses rooms, settings, theme, clear) */
+async function openHeaderMenu() {
+  await page.click('button[onclick="openMenu()"]');
+  await wait(250);
+}
+
 // ── Test suite ─────────────────────────────────────────────────────────────
 (async () => {
   browser = await chromium.launch({ headless: true });
@@ -332,7 +338,8 @@ async function closeOverlay() {
   console.log('\n── Rooms panel (Bedroom + Living) ────────────────────────────────');
   // =========================================================================
 
-  await test('Rooms panel opens via rooms icon in header', async () => {
+  await test('Rooms panel opens via the header menu', async () => {
+    await openHeaderMenu();
     await page.click('button[onclick="openRooms()"]');
     await wait(300);
     expectTrue(await page.$('.sheet'), 'rooms sheet opened');
@@ -355,7 +362,8 @@ async function closeOverlay() {
   });
 
   await test('Adding a living area creates a Living section tab', async () => {
-    // Rooms panel closed after addRoom — reopen
+    // Rooms panel closed after addRoom — reopen via the header menu
+    await openHeaderMenu();
     await page.click('button[onclick="openRooms()"]');
     await wait(300);
     const addBtns = await page.$$('.sheet button[onclick^="addRoom"]');
@@ -533,7 +541,8 @@ async function closeOverlay() {
   console.log('\n── Settings & price overrides ────────────────────────────────────');
   // =========================================================================
 
-  await test('Settings sheet opens via gear icon', async () => {
+  await test('Settings sheet opens via the header menu', async () => {
+    await openHeaderMenu();
     await page.click('button[onclick="openSettings()"]');
     await wait(300);
     expectTrue(await page.$('.sheet'), 'settings sheet open');
@@ -670,22 +679,27 @@ async function closeOverlay() {
   console.log('\n── Dark mode ─────────────────────────────────────────────────────');
   // =========================================================================
 
-  await test('dark mode toggle switches data-theme attribute', async () => {
+  await test('dark mode toggles via the header menu', async () => {
     const before = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    await openHeaderMenu();
     await page.click('button[onclick="toggleTheme()"]');
     await wait(200);
     const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     expectTrue(before !== after, `theme changed: ${before} → ${after}`);
+    await closeOverlay();
   });
 
   await test('toggling theme twice restores original', async () => {
     const before = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    await openHeaderMenu();
+    // menu stays open after each toggle so the switch is visible in place
     await page.click('button[onclick="toggleTheme()"]');
     await wait(150);
     await page.click('button[onclick="toggleTheme()"]');
     await wait(150);
     const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     expect(after, before, `restored: ${before} → (toggle×2) → ${after}`);
+    await closeOverlay();
   });
 
   // =========================================================================
@@ -808,6 +822,39 @@ async function closeOverlay() {
     } finally {
       await context.setOffline(false);
     }
+  });
+
+  // =========================================================================
+  console.log('\n── Clear all data ────────────────────────────────────────────────');
+  // =========================================================================
+
+  await test('menu clear-all wipes projects and starts afresh', async () => {
+    const countBefore = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('spark_projects_v2') || '[]').length);
+    expectGt(countBefore, 1, 'suite accumulated multiple projects');
+    await openHeaderMenu();
+    await page.click('button[onclick="confirmClearApp()"]');
+    await wait(300);
+    // typing anything but CLEAR must cancel
+    await (await page.$('#prompt-input')).fill('nope');
+    await page.click('button[onclick="confirmPrompt()"]');
+    await wait(300);
+    const countAfterCancel = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('spark_projects_v2') || '[]').length);
+    expect(countAfterCancel, countBefore, 'data intact after wrong confirmation');
+    // now confirm for real
+    await openHeaderMenu();
+    await page.click('button[onclick="confirmClearApp()"]');
+    await wait(300);
+    await (await page.$('#prompt-input')).fill('CLEAR');
+    await page.click('button[onclick="confirmPrompt()"]');
+    await page.waitForSelector('.hdr-total-num', { timeout: 10000 });
+    await wait(500);
+    expect(await grandTotal(), '$0', 'total reset to $0');
+    const projects = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('spark_projects_v2') || '[]'));
+    expectTrue(projects.length <= 1, `old projects wiped (${projects.length} left)`);
+    expectTrue((projects[0]?.name || 'New Estimate') === 'New Estimate', 'fresh default project');
   });
 
   // ── Results ───────────────────────────────────────────────────────────────

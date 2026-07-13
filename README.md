@@ -56,6 +56,7 @@ Then visit `http://localhost:8080`.
 
 ### Design
 - **Emerald & gold theme** — gradient hero total card, warm-stone light mode, deep-forest dark mode
+- **Consolidated header menu (⋮)** — Home & rooms, price settings, and the theme toggle live in one dropdown, plus a **Clear all data** action (typed-confirmation guarded) to reset the app to a fresh state
 - Every icon is a real inline SVG — no emoji glyphs anywhere in the UI
 - Built for one-thumb use in the field: tapping an item's label toggles it (not just the checkbox), and every quantity field has −/+ stepper buttons
 - Safe-area-aware header, tabs, and nav for notched phones
