@@ -543,7 +543,7 @@ async function openHeaderMenu() {
 
   await test('Settings sheet opens via the header menu', async () => {
     await openHeaderMenu();
-    await page.click('button[onclick="openSettings()"]');
+    await page.click('button[onclick="openPricing()"]');
     await wait(300);
     expectTrue(await page.$('.sheet'), 'settings sheet open');
   });

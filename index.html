@@ -316,8 +316,25 @@ input[type=number]{-moz-appearance:textfield;}
 
 <script>
 // =============================================================
+// SPARK ESTIMATOR — single-file, framework-free PWA
+//
+// Architecture at a glance:
+//   • One mutable state object `S`. User actions mutate S and call
+//     render(), which rebuilds the view from string templates.
+//   • Hot paths (qty typing, deal inputs, list searches, 3D drag)
+//     skip render() and patch DOM nodes in place, so inputs never
+//     lose focus and sliders stay smooth on slow devices.
+//   • Every line item is stored under the key `${instanceId}:${itemId}`,
+//     which lets the same repair be tracked independently per room
+//     instance (Bathroom 1 vs Bathroom 2) with zero special-casing.
+//   • Persistence: the current project snapshots to localStorage on a
+//     debounce; global price overrides live under their own key.
+// =============================================================
+
+// =============================================================
 // PRICES  id -> [name, cost, unit, {serial?}]
 // Costs come from the official Pricing List CSV — the single source of truth.
+// {serial:true} marks equipment that gets the photo + serial-capture UI.
 // =============================================================
 const PRICES = {
   'ig-01':['Refinish Hardwood Floor',2.35,'sqft'],
@@ -471,7 +488,9 @@ const GROUPS = {
 };
 
 // =============================================================
-// SECTION TYPES
+// SECTION TYPES — the five brief-mandated sections plus Bedrooms and
+// Living. `multi:true` sections hold a list of room instances the
+// agent can add/remove; the rest always have exactly one instance.
 // =============================================================
 const SECTION_TYPES = {
   interior: {label:'General',   groups:['flooring','paint','doors','pest','finishing'],  multi:false},
@@ -575,12 +594,12 @@ function saveCurrentProject() {
 }
 
 let _saveTimer;
-function scheduleSave() {
+function queueSave() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(saveCurrentProject, 800);
 }
 
-function loadProjectIntoState(proj) {
+function hydrateProject(proj) {
   S.projectId   = proj.id;
   S.projectName = proj.name;
   S.sections    = proj.sections    || defaultSections();
@@ -609,7 +628,8 @@ function defaultSections() {
 }
 
 function ensureItemKeys() {
-  // Make sure all known items have a state entry
+  // Backfill a state entry for every item in every room instance, so
+  // renders and calculations never need to null-check missing keys.
   for (const [stId, stDef] of Object.entries(SECTION_TYPES)) {
     const insts = S.sections[stId]?.instances || [];
     for (const inst of insts) {
@@ -713,6 +733,8 @@ function calcGrandTotal() {
 }
 
 function calcProgress() {
+  // A group counts as reviewed when any of its items is checked OR its
+  // "No action needed" box is ticked; totals span every room instance.
   let total = 0, done = 0;
   for (const [stId, stDef] of Object.entries(SECTION_TYPES)) {
     const insts = S.sections[stId]?.instances || [];
@@ -744,7 +766,8 @@ function fmtDate(iso) {
 }
 
 // =============================================================
-// ACTIVE SECTIONS (tabs)
+// ACTIVE SECTIONS — only sections with at least one room instance get
+// a tab, so empty Bedrooms/Living stay hidden until a room is added.
 // =============================================================
 function activeSections() {
   return Object.entries(SECTION_TYPES)
@@ -1675,6 +1698,8 @@ function switchRoom(i) {
 }
 
 function toggleGroup(custKey) {
+  // Re-render swaps the card body in/out; afterwards restore the scroll
+  // position (collapse) or glide the opened card to the top (expand).
   const scrollEl = document.getElementById('scroll-area');
   const st = scrollEl?.scrollTop || 0;
   const wasExpanded = S.expandedGroups.has(custKey);
@@ -1703,7 +1728,7 @@ function toggleItem(key) {
   S.items[key].checked = !S.items[key].checked;
   if (!S.items[key].checked) S.items[key].qty = '';
   else clearNAForItem(key); // a checked repair contradicts "no action needed"
-  scheduleSave();
+  queueSave();
   render();
   if (S.items[key]?.checked) {
     setTimeout(() => document.querySelector(`[data-key="${key}"] .qty-input`)?.focus(), 50);
@@ -1727,15 +1752,15 @@ function clearNAForItem(key) {
 function toggleNA(key) {
   if (!S.items[key]) S.items[key] = {checked:false};
   S.items[key].checked = !S.items[key].checked;
-  scheduleSave();
+  queueSave();
   render();
 }
 
 function updateQty(key, val) {
   if (!S.items[key]) S.items[key] = {checked:true, qty:''};
   S.items[key].qty = val;
-  scheduleSave();
-  updateTotalsInPlace(key);
+  queueSave();
+  patchTotals(key);
 }
 
 // Stepper buttons beside the qty input — patches the input in place so the
@@ -1747,17 +1772,17 @@ function stepQty(key, delta) {
   S.items[key].qty = next > 0 ? String(next) : '';
   const inp = document.querySelector(`[data-key="${key}"] .qty-input`);
   if (inp) inp.value = S.items[key].qty;
-  scheduleSave();
-  updateTotalsInPlace(key);
+  queueSave();
+  patchTotals(key);
 }
 
 function deleteItem(key) {
   S.deletedItems[key] = true;
-  scheduleSave();
+  queueSave();
   render();
   showToast('Item removed', {label:'Undo', fn:() => {
     delete S.deletedItems[key];
-    scheduleSave();
+    queueSave();
     render();
   }});
 }
@@ -1766,7 +1791,7 @@ function updateDeal(field, val) {
   if (field==='arv')      S.dealARV = val;
   if (field==='purchase') S.dealPurchase = val;
   if (field==='weeks')    S.dealWeeks = parseInt(val)||12;
-  scheduleSave();
+  queueSave();
   updateDealInPlace();
 }
 
@@ -1812,12 +1837,12 @@ function updatePrice(id, val, scope) {
   if (isNaN(n) || n < 0) return;
   if (scope === 'project') S.projPrices[id] = n;
   else { S.globalPrices[id] = n; saveGlobalPrices(); }
-  scheduleSave();
+  queueSave();
 }
 function resetPrices() {
   if (S.priceScope === 'project') S.projPrices = {};
   else { S.globalPrices = {}; saveGlobalPrices(); }
-  scheduleSave();
+  queueSave();
   render();
 }
 
@@ -1841,7 +1866,7 @@ function confirmAddItem() {
   const cid = `custom_${Date.now()}`;
   S.customItems[custKey].push({id:cid, name, cost, unit});
   S.items[`${instId}:${cid}`] = {checked:false, qty:''};
-  scheduleSave();
+  queueSave();
   S.overlay = null;
   render();
 }
@@ -1858,11 +1883,11 @@ function addPhoto(key) {
     if (!S.photos[key]) S.photos[key] = [];
     let lastUrl = null;
     for (const file of input.files) {
-      const dataUrl = await compressImage(file);
+      const dataUrl = await compressPhoto(file);
       S.photos[key].push({dataUrl, name: file.name});
       lastUrl = dataUrl;
     }
-    scheduleSave();
+    queueSave();
     render();
     if (lastUrl && !S.serials[key]) scanSerial(key, lastUrl);
   };
@@ -1870,7 +1895,7 @@ function addPhoto(key) {
 }
 function removePhoto(key, idx) {
   S.photos[key]?.splice(idx, 1);
-  scheduleSave();
+  queueSave();
   render();
 }
 
@@ -1881,7 +1906,7 @@ function editSerial(key) {
   showPromptModal('Serial number', 'e.g. 4820A77', S.serials[key] || '', val => {
     // Strip any typed "S/N" prefix — the badge already labels it
     S.serials[key] = val.toUpperCase().replace(/^S\/?N[-:#.\s]*/,'');
-    scheduleSave();
+    queueSave();
     render();
   });
 }
@@ -1920,7 +1945,7 @@ async function scanSerial(key, dataUrl) {
     if (S.serials[key]) return; // user typed one while we were scanning
     if (serial) {
       S.serials[key] = serial;
-      scheduleSave();
+      queueSave();
       if (!S.overlay) render();
       showToast(`Serial detected: ${serial}`, {label:'Edit', fn:() => editSerial(key)});
     } else {
@@ -1934,7 +1959,7 @@ async function scanSerial(key, dataUrl) {
 // Project management
 function openProjects() { S.overlay = 'projects'; S.projSearch = ''; render(); }
 function openRooms() { S.overlay = 'rooms'; render(); }
-function openSettings() { S.overlay = 'settings'; render(); }
+function openPricing() { S.overlay = 'settings'; render(); }
 function openExport() { S.overlay = 'export'; render(); }
 function openMenu() { S.overlay = 'menu'; render(); }
 function closeOverlay() { S.overlay = null; render(); }
@@ -1947,7 +1972,7 @@ function renderMenu() {
   <div class="overlay-bg clear" onclick="closeOverlay()"></div>
   <div class="menu-pop">
     <button class="menu-item" onclick="openRooms()">${ICONS.rooms} Home &amp; rooms</button>
-    <button class="menu-item" onclick="openSettings()">${ICONS.settings} Price settings</button>
+    <button class="menu-item" onclick="openPricing()">${ICONS.settings} Price settings</button>
     <button class="menu-item" onclick="toggleTheme()">${dark ? ICONS.sun : ICONS.moon} ${dark ? 'Light mode' : 'Dark mode'}</button>
     <div class="menu-sep"></div>
     <button class="menu-item danger" onclick="confirmClearApp()">${ICONS.restart} Clear all data</button>
@@ -1973,7 +1998,7 @@ function switchProject(id) {
   if (!proj) return;
   S.sectionIdx = 0; S.roomIdx = 0; S.nav = 'walk';
   S.expandedGroups = new Set();
-  loadProjectIntoState(proj);
+  hydrateProject(proj);
   S.overlay = null;
   render();
 }
@@ -2008,7 +2033,7 @@ function newProject() {
 function renameProject() {
   showPromptModal('Rename Project', 'e.g. 123 Main St', S.projectName, name => {
     S.projectName = name;
-    scheduleSave();
+    queueSave();
     render();
   });
 }
@@ -2044,7 +2069,7 @@ function addRoom(stId) {
       if (!S.items[key]) S.items[key] = {checked:false, qty:''};
     }
   }
-  scheduleSave();
+  queueSave();
   S.overlay = null;
   // navigate to the new room if we're on a multi section
   const sects = activeSections();
@@ -2070,7 +2095,7 @@ function removeRoom(stId, idx) {
   for (const k of Object.keys(S.customItems)) { if (k.startsWith(prefix)) delete S.customItems[k]; }
   for (const k of Object.keys(S.serials)) { if (k.startsWith(prefix)) delete S.serials[k]; }
   S.roomIdx = Math.max(0, Math.min(S.roomIdx, insts.length - 1));
-  scheduleSave();
+  queueSave();
   render();
 }
 
@@ -2079,7 +2104,7 @@ function renameRoom(stId, idx) {
   if (!inst) return;
   showPromptModal('Rename Room', 'e.g. Master Bath', inst.name, name => {
     inst.name = name;
-    scheduleSave();
+    queueSave();
     render();
   });
 }
@@ -2087,7 +2112,7 @@ function renameRoom(stId, idx) {
 // =============================================================
 // PARTIAL UPDATE (avoid full re-render on qty input)
 // =============================================================
-function updateTotalsInPlace(changedKey) {
+function patchTotals(changedKey) {
   // Update line item total
   const card = document.querySelector(`[data-key="${changedKey}"]`);
   if (card) {
@@ -2134,7 +2159,7 @@ function updateTotalsInPlace(changedKey) {
 // =============================================================
 // IMAGE COMPRESSION
 // =============================================================
-function compressImage(file, maxDim=1600, q=0.82) {
+function compressPhoto(file, maxDim=1600, q=0.82) {
   return new Promise(res => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -2153,7 +2178,11 @@ function compressImage(file, maxDim=1600, q=0.82) {
 }
 
 // =============================================================
-// EXPORT
+// EXPORT — builds a styled worksheet cell-by-cell (xlsx-js-style):
+// title block, a colored band per section/room with line items and a
+// subtotal, the grand total, and a serial-number table. With photos
+// attached, everything is bundled into one ZIP; otherwise the .xlsx
+// downloads directly (the button label always says which).
 // =============================================================
 async function doExport() {
   if (typeof XLSX === 'undefined' || typeof JSZip === 'undefined') {
@@ -2329,7 +2358,7 @@ function runToastAction() {
   S.globalPrices = loadGlobalPrices();
   const projects = loadAllProjects();
   if (projects.length > 0) {
-    loadProjectIntoState(projects[0]);
+    hydrateProject(projects[0]);
   } else {
     S.projectId   = `proj_${Date.now()}`;
     S.projectName = 'New Estimate';

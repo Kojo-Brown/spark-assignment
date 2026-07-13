@@ -1,62 +1,24 @@
 # Spark Estimator — Submission Writeup
-**Kojo Brown · kojo@email.com · github.com/Kojo-Brown/spark-assignment**
+**Kojo Brown · kojobro67@gmail.com · [Live demo](https://kojo-brown.github.io/spark-assignment/) · [github.com/Kojo-Brown/spark-assignment](https://github.com/Kojo-Brown/spark-assignment)**
 
 ---
 
 ## 1. Most Interesting Design Decision
 
-**The state key architecture that makes multi-room work.**
-
-Every repair item in the app is stored as a single flat key: `{instanceId}:{itemId}`. For example, `bath_1:ba-04` and `bath_2:ba-04` are independent entries — the same toilet line item tracked separately for Bathroom 1 and Bathroom 2. Adding a third bathroom, a bedroom, or a living area just pushes new instance IDs onto the section; no special-casing, no nested structure, no migration.
-
-This design paid off when the brief asked for Bedrooms and Living Areas to be decoupled from Interior/General. I didn't restructure the data model — I created new section types pointing at new group definitions, and the existing key scheme handled the rest. Every calculation, export row, and progress counter already operated on keys, so multi-room support was additive rather than a rewrite.
-
-The UX implication: agents can add and remove rooms freely mid-walkthrough because rooms are just instance lists. Removing a room deletes its key prefix from state. Adding one initializes an empty key set. There is no hidden data, no orphaned cost.
-
----
+**A flat state-key architecture that makes multi-room support free.** Every repair item is stored under one key: `{instanceId}:{itemId}` — so `bath_1:ba-04` and `bath_2:ba-04` are independent toilets in independent bathrooms. Adding a third bathroom, a bedroom, or a living area just pushes a new instance id onto a section; every calculation, export row, and progress counter already operates on keys, so the brief's "decouple Bedrooms and Living from Interior/General" requirement was additive, not a rewrite. Removing a room deletes its key prefix — no hidden data, no orphaned cost. The UX consequence: agents add and remove rooms freely mid-walkthrough and the running total is always exactly the sum of what's on screen.
 
 ## 2. What Is Broken or Fragile
 
-**Photo storage hits localStorage limits fast.** Photos are compressed and stored as base64 strings in `localStorage`. A single compressed JPEG is ~80–120KB. Ten photos across a walkthrough can push toward the 5MB limit on Safari. The app now warns the agent with a toast when a save has to drop photos, but the durable fix is IndexedDB for binary blobs.
+**Photo storage rides the localStorage quota.** Compressed JPEGs are ~80–120KB as base64; a photo-heavy walkthrough can approach Safari's ~5MB cap. The app degrades gracefully (a toast warns and the estimate itself always survives), but the durable fix is IndexedDB for binary blobs. **Serial OCR is best-effort:** glare, curves, and dot-matrix labels defeat Tesseract, and the first scan needs a network fetch of the engine — so every detected serial is an editable badge, never silently trusted. **Rendering is rebuild-by-default:** fast at this DOM size, and hot paths (qty, deal inputs, searches) patch in place, but a much larger catalog would need keyed diffing.
 
-**Serial OCR is best-effort.** The Tesseract pass runs on the compressed photo and appliance labels vary wildly — glare, curved surfaces, and dot-matrix prints defeat it. The regex prefers explicit "S/N:" prefixes and falls back to the longest alphanumeric run, so false positives are possible. Every detected serial is therefore shown as an editable badge rather than trusted silently, and the first scan needs a network connection to fetch the OCR engine.
+## 3. Creative Additions & Why
 
-**The render model is rebuild-by-default.** Checking an item regenerates the whole view. It's fast at this DOM size and the hot paths (qty typing, Deal Analyzer, price search) are patched in place, but a much larger price list would eventually need keyed diffing.
-
----
-
-## 3. Creative Additions — Deal Analyzer, Serial OCR & 3D Model
-
-The Deal Analyzer is a live profit calculator embedded in a third tab alongside the walkthrough and summary.
-
-**Why I built it:** An acquisition agent standing in a house already has two numbers in their head — what they think the house will sell for after repairs (ARV) and what they're planning to offer. The app already has the third number: the live repair total from the walkthrough. Connecting all three takes thirty seconds of input and immediately answers the question every walkthrough is really about: *does this deal make money?*
-
-**What it does:** Enter ARV and purchase price. Slide the holding period (2–52 weeks). The app calculates carry cost at 1.5% monthly, adds it to purchase + repairs, subtracts from ARV, and shows projected profit, ROI percentage, and a verdict label (Strong deal / Thin margin / Losing deal). A stacked bar breaks the cost basis into four segments: purchase, repairs, carry, and profit.
-
-**The practical value:** Agents currently have to leave the property, open a spreadsheet, and run the math later. With the Deal Analyzer, a go/no-go decision happens before they walk out the door — while the property context is still fresh. The repair estimate feeds it automatically; they only type two numbers.
-
-**Serial number OCR** (the "significant plus" from the brief): when an agent photographs a furnace or water heater label, the app lazy-loads Tesseract.js, OCRs the photo in-browser, and extracts the serial number — preferring explicit "S/N:" prefixes, falling back to the longest alphanumeric run. The result appears as a tappable, editable badge; serials flow into the Excel export as a dedicated table and into photo filenames. No server, and after the first use the OCR engine is cached for offline work.
-
-**3D property model:** the Summary tab renders an interactive 3D house built entirely with CSS 3D transforms — no libraries, no WebGL, fully offline. Each face maps to a walkthrough section (roof = Exterior, foundation = Systems, the four walls = General, Kitchen, Bathrooms, Bed & Living) and fills bottom-up with color as that section's groups are checked or reviewed. Drag rotates it; tapping a face or its legend chip jumps directly to that section of the walkthrough. It turns the abstract "7/26 groups" counter into a picture of the property an agent can read in one glance — and doubles as navigation.
-
----
+**Deal Analyzer** — an agent in a driveway has ARV and offer price in their head; the app already has the third number (live repair total). Two inputs plus a holding-period slider produce carry cost (1.5%/mo), total basis, projected profit, ROI, and a Strong/Thin/Losing verdict — the go/no-go answered before leaving the property. **3D Property Model** — a CSS-3D house (no libraries, offline) on the Summary tab where roof = Exterior, foundation = Systems, and the walls = General/Kitchen/Bathrooms/Bed+Living. Faces fill with color as sections are reviewed, and tapping a face jumps to that section — progress you can read at a glance, doubling as navigation. **Serial OCR** (the brief's "significant plus") — photos are OCR'd in-browser and serials flow into the Excel export and photo filenames.
 
 ## 4. What I'd Ship Next (Two More Days)
 
-**Day 1 — IndexedDB photo storage + per-group notes.** Move photo blobs out of `localStorage` into IndexedDB so a full walkthrough (30+ photos) never hits the quota, with the same export path. Add a free-text notes field to each group for flagging things that don't fit a line item (e.g., "previous water damage visible under sink").
-
-**Day 2 — Shareable export link.** Right now the only output is a ZIP download. I'd add a "Copy share link" button that encodes the full project state as a compressed, base64-encoded URL fragment — no server required, just `LZString` compression. The recipient opens the link and sees a read-only summary they can open in the same app.
-
----
+**Day 1 — IndexedDB photo storage + per-group notes.** Move photo blobs out of localStorage so a 30-photo walkthrough never hits quota, same export path; add a free-text note per group for issues that don't fit a line item ("water damage under sink"). **Day 2 — Shareable read-only link.** Encode the full project as a compressed URL fragment (LZString, no server) so an agent can text the team a link that opens as a read-only summary in the same app.
 
 ## 5. AI Tooling
 
-This project was built entirely using **Claude Code** (Anthropic's CLI). I used it to:
-- Read and interpret the contest brief, pricing CSV, and design prototype
-- Write the initial implementation and all subsequent iterations
-- Debug rendering bugs, fix the price scope toggle logic, and refactor the prompt/confirm dialogs to mobile-safe custom modals
-- Generate the PWA icons from the provided logo using macOS `sips`
-
-The design prototype was imported via the Claude Design MCP, which gave Claude direct access to the Figma-equivalent spec including color variables, animation names, and overlay dimensions. Every line of code was written or reviewed through Claude Code. I treated it as a pair programmer: I described the architecture decisions and it executed them. I caught and corrected several of its assumptions — particularly around localStorage limits, the partial re-render strategy for qty inputs, and the mobile-safe modal requirement.
-
-AI handled speed. I handled judgment.
+Built entirely with **Claude Code** (Anthropic): it read the brief, pricing CSV, and reference app, wrote and iterated every feature, and drove headless-browser verification of each change (down to hand-checked math in the Excel output). I directed the architecture and caught its wrong assumptions — localStorage limits, focus-loss on re-render, mobile-safe modals. The test suites it maintained (63 unit + 83 Playwright e2e) gated every commit. AI supplied speed; I supplied judgment.
