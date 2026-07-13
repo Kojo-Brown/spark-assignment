@@ -786,7 +786,7 @@ async function openHeaderMenu() {
       const j = await r.json();
       return j.theme_color;
     });
-    expect(res, '#156A50', 'theme_color');
+    expect(res, '#D6511C', 'theme_color');
   });
 
   await test('service worker is registered', async () => {

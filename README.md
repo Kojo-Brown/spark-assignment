@@ -55,7 +55,7 @@ Then visit `http://localhost:8080`.
 - Works fully offline — the export libraries are precached by the service worker
 
 ### Design
-- **Emerald & gold theme** — gradient hero total card, warm-stone light mode, deep-forest dark mode
+- **Ember & charcoal theme** — Spark-brand orange, warm grays, and near-black blended across a charcoal gradient hero card with an orange glow; light and dark modes
 - **Consolidated header menu (⋮)** — Home & rooms, price settings, and the theme toggle live in one dropdown, plus a **Clear all data** action (typed-confirmation guarded) to reset the app to a fresh state
 - Every icon is a real inline SVG — no emoji glyphs anywhere in the UI
 - Built for one-thumb use in the field: tapping an item's label toggles it (not just the checkbox), and every quantity field has −/+ stepper buttons

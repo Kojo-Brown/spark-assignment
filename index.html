@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spark Estimator">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#156A50">
+<meta name="theme-color" content="#D6511C">
 <title>Spark Estimator</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -33,17 +33,17 @@ input[type=number]{-moz-appearance:textfield;}
 .mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums;}
 
 :root {
-  --bg:#F4F3EE; --fg:#161B18; --card:#FFFFFF;
-  --muted:#ECEAE2; --muted2:#F4F3EE; --muted-fg:#6C7570;
-  --border:#E3E1D7; --input-border:#D9D7CC;
-  --primary:#156A50; --primary-fg:#FFFFFF; --primary-soft:#E4EFE9;
-  --hero-grad:linear-gradient(140deg,#0C3629 0%,#14543F 52%,#1D7256 100%);
-  --hero-fg:#F2F7F3; --hero-dim:rgba(242,247,243,.62); --hero-line:rgba(255,255,255,.16);
-  --gold:#C9A25B; --gold-strong:#A5813E;
-  --good:#177A53; --good-soft:#E5F3EC;
-  --warn:#B97D18; --danger:#CE4B3F; --danger-soft:#FAECEA;
-  --shadow:0 1px 2px rgba(20,25,22,.04),0 6px 20px rgba(20,25,22,.05);
-  --shadow-lg:0 12px 44px rgba(20,25,22,.18);
+  --bg:#F5F4F1; --fg:#1A1B1D; --card:#FFFFFF;
+  --muted:#ECEAE6; --muted2:#F5F4F1; --muted-fg:#6F7175;
+  --border:#E5E3DF; --input-border:#DBD9D3;
+  --primary:#D6511C; --primary-fg:#FFFFFF; --primary-soft:#FBEAE1;
+  --hero-grad:linear-gradient(140deg,#141416 0%,#222225 55%,#2F3033 100%);
+  --hero-fg:#F5F4F2; --hero-dim:rgba(245,244,242,.6); --hero-line:rgba(255,255,255,.14);
+  --gold:#F08A4B; --gold-strong:#B85A22;
+  --good:#1B7A4E; --good-soft:#E6F3EC;
+  --warn:#B97D18; --danger:#CE4238; --danger-soft:#FAECEA;
+  --shadow:0 1px 2px rgba(20,21,23,.04),0 6px 20px rgba(20,21,23,.05);
+  --shadow-lg:0 12px 44px rgba(20,21,23,.18);
   --ring:0 0 0 3.5px color-mix(in srgb,var(--primary) 15%,transparent);
   --pt-safe:env(safe-area-inset-top,0px);
   --pb-safe:env(safe-area-inset-bottom,0px);
@@ -51,14 +51,14 @@ input[type=number]{-moz-appearance:textfield;}
   --pr-safe:max(14px,env(safe-area-inset-right,0px));
 }
 [data-theme="dark"] {
-  --bg:#0C100E; --fg:#EAEEEB; --card:#151A17;
-  --muted:#1F2622; --muted2:#101411; --muted-fg:#909B95;
-  --border:#262E29; --input-border:#2E372F;
-  --primary:#3EBE8F; --primary-fg:#08130D; --primary-soft:#17342A;
-  --hero-grad:linear-gradient(140deg,#10291F 0%,#154434 55%,#1B5A44 100%);
-  --hero-fg:#F0F6F1; --hero-dim:rgba(240,246,241,.6); --hero-line:rgba(255,255,255,.13);
-  --gold:#D8B472; --gold-strong:#E2C287;
-  --good:#46C795; --good-soft:#122A20;
+  --bg:#0E0E10; --fg:#EDEDEE; --card:#19191B;
+  --muted:#242427; --muted2:#121214; --muted-fg:#97989D;
+  --border:#2A2A2E; --input-border:#323237;
+  --primary:#F0703A; --primary-fg:#1A0D05; --primary-soft:#2F1C10;
+  --hero-grad:linear-gradient(140deg,#111113 0%,#1C1C1F 55%,#27272B 100%);
+  --hero-fg:#F2F2F1; --hero-dim:rgba(242,242,241,.58); --hero-line:rgba(255,255,255,.12);
+  --gold:#F59D63; --gold-strong:#FFB380;
+  --good:#43C08A; --good-soft:#13291F;
   --warn:#D9A544; --danger:#E8756A; --danger-soft:#331D1A;
   --shadow:0 1px 2px rgba(0,0,0,.45),0 6px 22px rgba(0,0,0,.3);
   --shadow-lg:0 14px 48px rgba(0,0,0,.55);
@@ -81,8 +81,8 @@ input[type=number]{-moz-appearance:textfield;}
 .icon-btn svg{display:block;flex:none;overflow:visible;}
 
 /* Hero total card */
-.hdr-total{margin:6px var(--pr-safe) 14px var(--pl-safe);padding:16px 18px 15px;border-radius:20px;background:var(--hero-grad);color:var(--hero-fg);position:relative;overflow:hidden;box-shadow:0 12px 32px -14px rgba(11,58,44,.6);}
-.hdr-total::before{content:'';position:absolute;top:-70px;right:-40px;width:210px;height:210px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.13),transparent 70%);pointer-events:none;}
+.hdr-total{margin:6px var(--pr-safe) 14px var(--pl-safe);padding:16px 18px 15px;border-radius:20px;background:var(--hero-grad);color:var(--hero-fg);position:relative;overflow:hidden;box-shadow:0 12px 32px -14px rgba(10,10,12,.55);}
+.hdr-total::before{content:'';position:absolute;top:-70px;right:-40px;width:210px;height:210px;border-radius:50%;background:radial-gradient(closest-side,rgba(240,138,75,.2),transparent 70%);pointer-events:none;}
 .hdr-total-label{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
 .hdr-total-num{font-size:40px;font-weight:700;letter-spacing:-1.5px;line-height:1.05;margin-top:4px;color:var(--hero-fg);}
 .hdr-meta{display:flex;align-items:center;gap:8px;margin-top:8px;position:relative;}
@@ -308,7 +308,7 @@ input[type=number]{-moz-appearance:textfield;}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;font-weight:600;padding:11px 18px;border-radius:13px;box-shadow:var(--shadow-lg);z-index:90;white-space:nowrap;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);}
 .toast.has-action{pointer-events:auto;}
 .toast-action{background:transparent;border:none;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:.04em;}
-[data-theme="dark"] .toast-action{color:#156A50;}
+[data-theme="dark"] .toast-action{color:#C2450F;}
 </style>
 </head>
 <body>
@@ -1307,15 +1307,15 @@ function renderDeal() {
         </div>
       </div>
       <div style="margin-top:14px;display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--muted);">
-        <div id="deal-bar-pur" style="width:${purW}%;background:var(--muted-fg);transition:width .4s;"></div>
+        <div id="deal-bar-pur" style="width:${purW}%;background:color-mix(in srgb,var(--fg) 78%,var(--muted-fg));transition:width .4s;"></div>
         <div id="deal-bar-rep" style="width:${repW}%;background:var(--primary);transition:width .4s;"></div>
-        <div id="deal-bar-hol" style="width:${holW}%;background:var(--gold);transition:width .4s;"></div>
+        <div id="deal-bar-hol" style="width:${holW}%;background:var(--muted-fg);transition:width .4s;"></div>
         <div id="deal-bar-pro" style="width:${proW}%;background:var(--good);transition:width .4s;"></div>
       </div>
       <div style="margin-top:9px;display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted-fg);">
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--muted-fg);display:inline-block;"></span>Purchase</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:color-mix(in srgb,var(--fg) 78%,var(--muted-fg));display:inline-block;"></span>Purchase</span>
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--primary);display:inline-block;"></span>Repairs</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--gold);display:inline-block;"></span>Carry</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--muted-fg);display:inline-block;"></span>Carry</span>
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--good);display:inline-block;"></span>Profit</span>
       </div>
     </div>
@@ -2181,19 +2181,19 @@ async function doExport() {
   const merge = (r, c1, c2) => merges.push({s:{r, c:c1}, e:{r, c:c2}});
 
   // Title
-  cell(row,0,'SPARK HOMES — REPAIR ESTIMATE', s({bold:true,sz:14,color:{rgb:'FFFFFF'}},'0C3629',{horizontal:'center',vertical:'center'}));
+  cell(row,0,'SPARK HOMES — REPAIR ESTIMATE', s({bold:true,sz:14,color:{rgb:'FFFFFF'}},'141416',{horizontal:'center',vertical:'center'}));
   merge(row,0,4); row++;
   cell(row,0,`Property: ${S.projectName}     Date: ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`,
-    s({sz:10,color:{rgb:'6B7570'}},'F4F3EE',{horizontal:'center'}));
+    s({sz:10,color:{rgb:'6F7175'}},'F5F4F1',{horizontal:'center'}));
   merge(row,0,4); row++; row++;
 
   const processSection = (label, rows) => {
     if (!rows.length) return;
-    cell(row,0,label.toUpperCase(), s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'156A50',{vertical:'center'}));
-    for (let c=1;c<5;c++) cell(row,c,'',s({},'156A50'));
+    cell(row,0,label.toUpperCase(), s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'D6511C',{vertical:'center'}));
+    for (let c=1;c<5;c++) cell(row,c,'',s({},'D6511C'));
     merge(row,0,4); row++;
     ['Repair Item','Unit','Unit Cost','Qty','Estimate'].forEach((h,c) =>
-      cell(row,c,h, s({bold:true,sz:10},'E4EFE9',{horizontal:c>=2?'right':'left'})));
+      cell(row,c,h, s({bold:true,sz:10},'FBEAE1',{horizontal:c>=2?'right':'left'})));
     row++;
     let secTot = 0;
     rows.forEach(({name, unit, cost, qty, total}) => {
@@ -2204,10 +2204,10 @@ async function doExport() {
       cell(row,4,total, s({sz:10},'FFFFFF',{horizontal:'right'}), '"$"#,##0');
       secTot += total; row++;
     });
-    cell(row,0,`${label} Total`, s({bold:true,sz:10,color:{rgb:'11553F'}},'E4EFE9'));
+    cell(row,0,`${label} Total`, s({bold:true,sz:10,color:{rgb:'A63E12'}},'FBEAE1'));
     merge(row,0,3);
-    for (let c=1;c<4;c++) cell(row,c,'',s({},'E4EFE9'));
-    cell(row,4,secTot, s({bold:true,sz:10,color:{rgb:'11553F'}},'E4EFE9',{horizontal:'right'}), '"$"#,##0');
+    for (let c=1;c<4;c++) cell(row,c,'',s({},'FBEAE1'));
+    cell(row,4,secTot, s({bold:true,sz:10,color:{rgb:'A63E12'}},'FBEAE1',{horizontal:'right'}), '"$"#,##0');
     row++; row++;
   };
 
@@ -2238,17 +2238,17 @@ async function doExport() {
   }
 
   const grand = calcGrandTotal();
-  cell(row,0,'TOTAL ESTIMATE', s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'0C3629',{horizontal:'center'}));
+  cell(row,0,'TOTAL ESTIMATE', s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'141416',{horizontal:'center'}));
   merge(row,0,3);
-  for (let c=1;c<4;c++) cell(row,c,'',s({},'0C3629'));
-  cell(row,4,grand, s({bold:true,sz:13,color:{rgb:'D8B472'}},'0C3629',{horizontal:'right'}), '"$"#,##0');
+  for (let c=1;c<4;c++) cell(row,c,'',s({},'141416'));
+  cell(row,4,grand, s({bold:true,sz:13,color:{rgb:'F08A4B'}},'141416',{horizontal:'right'}), '"$"#,##0');
 
   // Captured serial numbers
   const serialEntries = Object.entries(S.serials||{}).filter(([,v]) => v);
   if (serialEntries.length) {
     row += 2;
-    cell(row,0,'SERIAL NUMBERS', s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'3A443F',{vertical:'center'}));
-    for (let c=1;c<5;c++) cell(row,c,'',s({},'3A443F'));
+    cell(row,0,'SERIAL NUMBERS', s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'3B3B3F',{vertical:'center'}));
+    for (let c=1;c<5;c++) cell(row,c,'',s({},'3B3B3F'));
     merge(row,0,4); row++;
     for (const [key, serial] of serialEntries) {
       const [instId, itemId] = parseKey(key);
