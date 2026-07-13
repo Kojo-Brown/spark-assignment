@@ -60,6 +60,13 @@ Then visit `http://localhost:8080`.
 - Built for one-thumb use in the field: tapping an item's label toggles it (not just the checkbox), and every quantity field has −/+ stepper buttons
 - Safe-area-aware header, tabs, and nav for notched phones
 
+### 3D Property Model (Creative Addition)
+An interactive CSS-3D house on the Summary tab — zero libraries, fully offline:
+- Each face maps to a walkthrough section: roof = Exterior, foundation = Systems, walls = General / Kitchen / Bathrooms / Bed & Living
+- Faces fill with emerald as their section's groups are checked or reviewed — progress you can see at a glance
+- Legend chips show live percent complete and cost per section
+- Drag to rotate (gentle idle spin until touched; respects `prefers-reduced-motion`); tap any face or chip to jump straight to that section
+
 ### Deal Analyzer (Creative Addition)
 A built-in profit calculator that pulls the live repair total from the walkthrough and lets agents estimate the deal's margin before they leave the driveway:
 - Enter ARV (After Repair Value) and purchase price

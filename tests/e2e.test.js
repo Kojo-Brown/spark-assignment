@@ -431,6 +431,27 @@ async function closeOverlay() {
 
   await closeOverlay();
 
+  await test('3D property model renders on Summary', async () => {
+    expectTrue(await page.$('.house-scene'), 'house scene present');
+    expect((await page.$$('.house-scene [data-part]')).length, 6, '3d faces');
+  });
+
+  await test('tapping a model legend chip jumps to that section', async () => {
+    const chips = await page.$$('.house-legend .hleg');
+    let clicked = false;
+    for (const c of chips) {
+      if ((await c.evaluate(el => el.textContent)).includes('Kitchen')) {
+        await c.click();
+        clicked = true;
+        break;
+      }
+    }
+    await wait(300);
+    expectTrue(clicked, 'kitchen chip found');
+    const active = await $text('.tab-btn.active');
+    expectContains(active, 'Kitchen', 'kitchen tab active after tap');
+  });
+
   // =========================================================================
   console.log('\n── Deal Analyzer ─────────────────────────────────────────────────');
   // =========================================================================

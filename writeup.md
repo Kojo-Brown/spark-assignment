@@ -25,7 +25,7 @@ The UX implication: agents can add and remove rooms freely mid-walkthrough becau
 
 ---
 
-## 3. Creative Additions — Deal Analyzer & Serial OCR
+## 3. Creative Additions — Deal Analyzer, Serial OCR & 3D Model
 
 The Deal Analyzer is a live profit calculator embedded in a third tab alongside the walkthrough and summary.
 
@@ -36,6 +36,8 @@ The Deal Analyzer is a live profit calculator embedded in a third tab alongside 
 **The practical value:** Agents currently have to leave the property, open a spreadsheet, and run the math later. With the Deal Analyzer, a go/no-go decision happens before they walk out the door — while the property context is still fresh. The repair estimate feeds it automatically; they only type two numbers.
 
 **Serial number OCR** (the "significant plus" from the brief): when an agent photographs a furnace or water heater label, the app lazy-loads Tesseract.js, OCRs the photo in-browser, and extracts the serial number — preferring explicit "S/N:" prefixes, falling back to the longest alphanumeric run. The result appears as a tappable, editable badge; serials flow into the Excel export as a dedicated table and into photo filenames. No server, and after the first use the OCR engine is cached for offline work.
+
+**3D property model:** the Summary tab renders an interactive 3D house built entirely with CSS 3D transforms — no libraries, no WebGL, fully offline. Each face maps to a walkthrough section (roof = Exterior, foundation = Systems, the four walls = General, Kitchen, Bathrooms, Bed & Living) and fills bottom-up with color as that section's groups are checked or reviewed. Drag rotates it; tapping a face or its legend chip jumps directly to that section of the walkthrough. It turns the abstract "7/26 groups" counter into a picture of the property an agent can read in one glance — and doubles as navigation.
 
 ---
 

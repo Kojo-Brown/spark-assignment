@@ -212,6 +212,41 @@ input[type=number]{-moz-appearance:textfield;}
 .seg-btn.active{background:var(--card);color:var(--fg);box-shadow:var(--shadow);}
 .empty-note{text-align:center;color:var(--muted-fg);font-size:13.5px;padding:32px 20px;}
 
+/* 3D property model */
+.house-card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:13px 15px 13px;overflow:hidden;}
+.house-head{display:flex;align-items:center;gap:8px;}
+.house-title{margin:0;font-size:13px;font-weight:700;}
+.house-chip{font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:99px;background:var(--primary-soft);color:var(--primary);}
+.house-hint{margin-left:auto;font-size:10.5px;color:var(--muted-fg);}
+.house-scene{height:238px;display:flex;align-items:center;justify-content:center;perspective:950px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
+.house-scene:active{cursor:grabbing;}
+.house-orbit{transform-style:preserve-3d;transform:rotateX(-22deg);}
+.house-spin{transform-style:preserve-3d;animation:houseIdle 40s linear infinite;}
+.house-spin.still{animation:none;}
+@keyframes houseIdle{from{transform:rotateY(0deg);}to{transform:rotateY(360deg);}}
+@media (prefers-reduced-motion:reduce){.house-spin{animation:none;}}
+.house{position:relative;width:190px;height:86px;transform-style:preserve-3d;}
+.hface{position:absolute;background:color-mix(in srgb,var(--card) 88%,var(--fg));border:1px solid color-mix(in srgb,var(--fg) 16%,transparent);cursor:pointer;}
+.hf-front{left:0;top:-40px;width:190px;height:126px;transform:translateZ(65px);clip-path:polygon(0 31.75%,50% 0,100% 31.75%,100% 100%,0 100%);}
+.hf-back{left:0;top:-40px;width:190px;height:126px;transform:rotateY(180deg) translateZ(65px);clip-path:polygon(0 31.75%,50% 0,100% 31.75%,100% 100%,0 100%);}
+.hf-left{left:30px;top:0;width:130px;height:86px;transform:rotateY(-90deg) translateZ(95px);background:color-mix(in srgb,var(--card) 78%,var(--fg));}
+.hf-right{left:30px;top:0;width:130px;height:86px;transform:rotateY(90deg) translateZ(95px);background:color-mix(in srgb,var(--card) 78%,var(--fg));}
+.hf-roofF,.hf-roofB{left:-8px;top:-40px;width:206px;height:76px;transform-origin:top center;background:color-mix(in srgb,var(--card) 68%,var(--fg));border-radius:2px;}
+.hf-roofF{transform:rotateX(58.4deg);}
+.hf-roofB{transform:rotateX(-58.4deg);}
+.hfill{position:absolute;left:0;right:0;bottom:0;height:calc(var(--p,0)*1%);background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 28%,transparent),color-mix(in srgb,var(--primary) 60%,transparent));pointer-events:none;transition:height .5s ease;}
+.hf-roofF .hfill,.hf-roofB .hfill{height:100%;opacity:calc(var(--p,0)/100*.85);transition:opacity .5s ease;}
+.hfound{position:absolute;left:0;right:0;bottom:0;height:11px;background:color-mix(in srgb,var(--fg) 16%,var(--card));border-top:1px solid color-mix(in srgb,var(--fg) 20%,transparent);pointer-events:none;}
+.hfound::after{content:'';position:absolute;inset:0;background:var(--primary);opacity:calc(var(--sp,0)/100*.72);transition:opacity .5s ease;}
+.hwin{position:absolute;width:20px;height:24px;border:1.5px solid color-mix(in srgb,var(--fg) 32%,transparent);background:color-mix(in srgb,var(--gold) 16%,var(--bg));border-radius:2px;pointer-events:none;}
+.hdoor{position:absolute;width:25px;height:42px;bottom:11px;left:50%;margin-left:-12.5px;border:1.5px solid color-mix(in srgb,var(--fg) 32%,transparent);border-bottom:none;background:color-mix(in srgb,var(--gold) 34%,var(--card));border-radius:3px 3px 0 0;pointer-events:none;}
+.house-shadow{position:absolute;left:-35px;top:-4px;width:260px;height:180px;transform:rotateX(90deg);background:radial-gradient(50% 50% at 50% 50%,rgba(10,16,13,.3),transparent 68%);pointer-events:none;border:none;}
+[data-theme="dark"] .house-shadow{background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.55),transparent 68%);}
+.house-legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.hleg{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--muted2);border-radius:99px;padding:6px 11px;font-size:11.5px;font-weight:600;color:var(--fg);cursor:pointer;}
+.hleg-dot{width:8px;height:8px;border-radius:99px;flex:none;}
+.hleg-pct{font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--muted-fg);}
+
 /* Summary */
 .sum-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
 .sum-header{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;background:var(--primary-soft);}
@@ -451,6 +486,8 @@ let S = {
   priceScope: 'project',
   priceSearch: '',
   projSearch: '',
+  houseRY: -28,       // 3D model rotation (session only, not persisted)
+  houseTouched: false,
   promptModal: null, // { title, placeholder, value, callback }
   dealData: {},      // per project, stored in project
   // Current project
@@ -983,6 +1020,125 @@ function renderWalk() {
 }
 
 // =============================================================
+// RENDER - 3D PROPERTY MODEL
+// Pure CSS 3D (no libraries, works offline). Each part of the house
+// maps to a walkthrough section and fills with color as the section
+// progresses. Drag to rotate; tap a face or chip to jump there.
+// =============================================================
+const HOUSE_PARTS = [
+  {id:'interior', label:'General',      sts:['interior']},
+  {id:'kitchen',  label:'Kitchen',      sts:['kitchen']},
+  {id:'bathroom', label:'Bathrooms',    sts:['bathroom']},
+  {id:'rooms',    label:'Bed & Living', sts:['bedroom','living']},
+  {id:'systems',  label:'Systems',      sts:['systems']},
+  {id:'exterior', label:'Exterior',     sts:['exterior']},
+];
+
+function sectionProgressFor(stIds) {
+  let total = 0, done = 0, cost = 0;
+  for (const stId of stIds) {
+    const stDef = SECTION_TYPES[stId];
+    if (!stDef) continue;
+    cost += calcSectionTotal(stId);
+    for (const inst of (S.sections[stId]?.instances || [])) {
+      for (const gid of stDef.groups) {
+        const g = GROUPS[gid];
+        if (!g) continue;
+        total++;
+        const all = [...g.items, ...((S.customItems[`${inst.id}:${gid}`]||[]).map(c=>c.id))];
+        const any = all.some(iid => !S.deletedItems[mkKey(inst.id,iid)] && S.items[mkKey(inst.id,iid)]?.checked);
+        if (any || S.items[`NA:${inst.id}:${gid}`]?.checked) done++;
+      }
+    }
+  }
+  return {total, done, cost, pct: total ? Math.round(done/total*100) : 0};
+}
+
+function renderHouse() {
+  const P = {};
+  for (const p of HOUSE_PARTS) P[p.id] = sectionProgressFor(p.sts);
+  const ry = S.houseRY ?? -28;
+  const sysP = P.systems.pct;
+  const face = (cls, part, extra='') =>
+    `<div class="hface ${cls}" data-part="${part}" style="--p:${P[part].pct}" onclick="goHousePart('${part}')">
+      <span class="hfill"></span>${extra}
+    </div>`;
+  const found = `<span class="hfound" style="--sp:${sysP}"></span>`;
+
+  const chips = HOUSE_PARTS.map(p => {
+    const {pct, cost} = P[p.id];
+    const dot = pct > 0
+      ? `background:var(--primary);opacity:${(0.35 + pct*0.0065).toFixed(2)};`
+      : `background:var(--border);`;
+    return `<button class="hleg" onclick="goHousePart('${p.id}')">
+      <span class="hleg-dot" style="${dot}"></span>${esc(p.label)}
+      <span class="hleg-pct">${pct}%${cost>0?' · '+fmt$(cost):''}</span>
+    </button>`;
+  }).join('');
+
+  return `
+  <div class="house-card">
+    <div class="house-head">
+      <p class="house-title">Property model</p>
+      <span class="house-chip">3D</span>
+      <span class="house-hint">drag to rotate · tap to jump</span>
+    </div>
+    <div class="house-scene"
+      onpointerdown="houseDown(event)" onpointermove="houseMove(event)"
+      onpointerup="houseUp(event)" onpointercancel="houseUp(event)">
+      <div class="house-orbit">
+        <div class="house-spin${S.houseTouched ? ' still' : ''}">
+          <div class="house" id="house3d" style="transform:rotateY(${ry}deg);">
+            <div class="hface house-shadow"></div>
+            ${face('hf-front','interior', `<span class="hwin" style="left:22px;bottom:26px;"></span><span class="hwin" style="right:22px;bottom:26px;"></span><span class="hdoor"></span>${found}`)}
+            ${face('hf-back','bathroom', `<span class="hwin" style="left:30px;bottom:30px;"></span><span class="hwin" style="right:30px;bottom:30px;"></span>${found}`)}
+            ${face('hf-right','kitchen', `<span class="hwin" style="left:24px;bottom:24px;"></span><span class="hwin" style="right:24px;bottom:24px;"></span>${found}`)}
+            ${face('hf-left','rooms', `<span class="hwin" style="left:24px;bottom:24px;"></span><span class="hwin" style="right:24px;bottom:24px;"></span>${found}`)}
+            ${face('hf-roofF','exterior')}
+            ${face('hf-roofB','exterior')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="house-legend">${chips}</div>
+  </div>`;
+}
+
+// Drag-to-rotate. Rotation is patched directly on the transform so no
+// re-render happens mid-drag; the angle lives in S so it survives renders.
+let _houseActive = false, _houseStartX = 0, _houseBaseRY = 0, _houseMoved = false;
+function houseDown(e) {
+  _houseActive = true; _houseMoved = false;
+  _houseStartX = e.clientX;
+  _houseBaseRY = S.houseRY ?? -28;
+  S.houseTouched = true;
+  document.querySelector('.house-spin')?.classList.add('still');
+  e.currentTarget.setPointerCapture?.(e.pointerId);
+}
+function houseMove(e) {
+  if (!_houseActive) return;
+  const dx = e.clientX - _houseStartX;
+  if (Math.abs(dx) > 6) _houseMoved = true;
+  S.houseRY = _houseBaseRY + dx * 0.45;
+  const el = document.getElementById('house3d');
+  if (el) el.style.transform = `rotateY(${S.houseRY}deg)`;
+}
+function houseUp() {
+  _houseActive = false;
+  setTimeout(() => { _houseMoved = false; }, 0); // let the trailing click land first
+}
+function goHousePart(id) {
+  if (_houseMoved) return; // it was a drag, not a tap
+  const part = HOUSE_PARTS.find(p => p.id === id);
+  const sects = activeSections();
+  for (const st of (part?.sts || [])) {
+    const i = sects.findIndex(s => s.stId === st);
+    if (i >= 0) { S.nav = 'walk'; S.sectionIdx = i; S.roomIdx = 0; render(); return; }
+  }
+  if (id === 'rooms') openRooms(); // no bedrooms/living yet — offer to add one
+}
+
+// =============================================================
 // RENDER - SUMMARY VIEW
 // =============================================================
 function renderSummary() {
@@ -1027,6 +1183,7 @@ function renderSummary() {
         ${ICONS.export} Export ${photoCount > 0 ? 'ZIP (Excel + Photos)' : 'Excel Report'}
       </button>
     </div>
+    ${renderHouse()}
     ${sections.length === 0
       ? `<div style="text-align:center;padding:40px 0;color:var(--muted-fg);font-size:14px;">No items selected yet.</div>`
       : sections.map(sc => `
