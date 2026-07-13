@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spark Estimator">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#C2451E">
+<meta name="theme-color" content="#156A50">
 <title>Spark Estimator</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -25,182 +25,244 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;}
-body{font-family:'Geist',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;}
+body{font-family:'Geist',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
 button,input{font-family:inherit;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;}
 ::-webkit-scrollbar{width:0;height:0;}
-.mono{font-family:'Geist Mono',monospace;}
+.mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums;}
 
 :root {
-  --bg:#ffffff; --fg:#0b0b0d; --card:#ffffff;
-  --muted:#f4f4f5; --muted2:#fafafa; --muted-fg:#71717a;
-  --border:#e7e7ea; --input-border:#e4e4e7;
-  --primary:#C2451E; --primary-fg:#ffffff; --primary-soft:#fbeae3;
-  --good:#15803d; --good-soft:#effaf2;
-  --shadow:0 1px 2px rgba(9,9,11,.06),0 4px 16px rgba(9,9,11,.07);
-  --shadow-lg:0 8px 32px rgba(9,9,11,.12);
+  --bg:#F4F3EE; --fg:#161B18; --card:#FFFFFF;
+  --muted:#ECEAE2; --muted2:#F4F3EE; --muted-fg:#6C7570;
+  --border:#E3E1D7; --input-border:#D9D7CC;
+  --primary:#156A50; --primary-fg:#FFFFFF; --primary-soft:#E4EFE9;
+  --hero-grad:linear-gradient(140deg,#0C3629 0%,#14543F 52%,#1D7256 100%);
+  --hero-fg:#F2F7F3; --hero-dim:rgba(242,247,243,.62); --hero-line:rgba(255,255,255,.16);
+  --gold:#C9A25B; --gold-strong:#A5813E;
+  --good:#177A53; --good-soft:#E5F3EC;
+  --warn:#B97D18; --danger:#CE4B3F; --danger-soft:#FAECEA;
+  --shadow:0 1px 2px rgba(20,25,22,.04),0 6px 20px rgba(20,25,22,.05);
+  --shadow-lg:0 12px 44px rgba(20,25,22,.18);
+  --ring:0 0 0 3.5px color-mix(in srgb,var(--primary) 15%,transparent);
   --pt-safe:env(safe-area-inset-top,0px);
   --pb-safe:env(safe-area-inset-bottom,0px);
+  --pl-safe:max(14px,env(safe-area-inset-left,0px));
+  --pr-safe:max(14px,env(safe-area-inset-right,0px));
 }
 [data-theme="dark"] {
-  --bg:#0a0a0c; --fg:#f4f4f5; --card:#161619;
-  --muted:#222226; --muted2:#1b1b1f; --muted-fg:#9a9aa3;
-  --border:#2a2a30; --input-border:#26262b;
-  --primary:#DC5A2A; --primary-soft:#2a1812;
-  --good:#22c55e; --good-soft:#10231a;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+  --bg:#0C100E; --fg:#EAEEEB; --card:#151A17;
+  --muted:#1F2622; --muted2:#101411; --muted-fg:#909B95;
+  --border:#262E29; --input-border:#2E372F;
+  --primary:#3EBE8F; --primary-fg:#08130D; --primary-soft:#17342A;
+  --hero-grad:linear-gradient(140deg,#10291F 0%,#154434 55%,#1B5A44 100%);
+  --hero-fg:#F0F6F1; --hero-dim:rgba(240,246,241,.6); --hero-line:rgba(255,255,255,.13);
+  --gold:#D8B472; --gold-strong:#E2C287;
+  --good:#46C795; --good-soft:#122A20;
+  --warn:#D9A544; --danger:#E8756A; --danger-soft:#331D1A;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 6px 22px rgba(0,0,0,.3);
+  --shadow-lg:0 14px 48px rgba(0,0,0,.55);
+  --ring:0 0 0 3.5px color-mix(in srgb,var(--primary) 24%,transparent);
 }
 
-#root{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;background:var(--muted2);}
+#root{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;background:var(--bg);}
 
 /* Header */
 .hdr{background:var(--card);border-bottom:1px solid var(--border);flex:none;padding-top:var(--pt-safe);}
-.hdr-inner{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;}
-.hdr-total{padding:4px 14px 14px;}
-.hdr-total-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-fg);}
-.hdr-total-num{font-size:38px;font-weight:700;letter-spacing:-1.5px;line-height:1;margin-top:2px;}
-.hdr-meta{display:flex;align-items:center;gap:8px;margin-top:8px;}
-.progress-bar{flex:1;height:5px;background:var(--muted);border-radius:99px;overflow:hidden;}
-.progress-fill{height:100%;background:var(--primary);border-radius:99px;transition:width .4s ease;}
-.progress-label{font-size:11.5px;color:var(--muted-fg);white-space:nowrap;}
+.hdr-inner{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px calc(var(--pr-safe) - 4px) 4px calc(var(--pl-safe) - 4px);}
+.brand{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;}
+.brand img{height:19px;display:block;flex:none;}
+[data-theme="dark"] .brand img{filter:brightness(0) invert(1);opacity:.92;}
+.brand-name{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-name em{font-style:normal;color:var(--muted-fg);}
+.hdr-actions{display:flex;align-items:center;gap:0;flex:none;}
+.icon-btn{width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:12px;color:var(--muted-fg);cursor:pointer;padding:0;transition:background .15s,color .15s;}
+.icon-btn:active{background:var(--muted);color:var(--fg);}
+.icon-btn svg{display:block;flex:none;overflow:visible;}
 
-/* Tabs */
-.tabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--border);flex:none;}
-.tab-btn{flex:none;padding:6px 13px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
-.tab-btn.active{background:var(--primary);color:#fff;}
-.tab-btn:not(.active){background:var(--muted);color:var(--muted-fg);}
-.tab-amt{font-size:11px;margin-left:4px;opacity:.85;}
+/* Hero total card */
+.hdr-total{margin:6px var(--pr-safe) 14px var(--pl-safe);padding:16px 18px 15px;border-radius:20px;background:var(--hero-grad);color:var(--hero-fg);position:relative;overflow:hidden;box-shadow:0 12px 32px -14px rgba(11,58,44,.6);}
+.hdr-total::before{content:'';position:absolute;top:-70px;right:-40px;width:210px;height:210px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.13),transparent 70%);pointer-events:none;}
+.hdr-total-label{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+.hdr-total-num{font-size:40px;font-weight:700;letter-spacing:-1.5px;line-height:1.05;margin-top:4px;color:var(--hero-fg);}
+.hdr-meta{display:flex;align-items:center;gap:8px;margin-top:8px;position:relative;}
+.hdr-proj-name{font-size:12.5px;font-weight:500;color:var(--hero-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.hdr-meta .icon-btn{width:30px;height:30px;border-radius:9px;color:var(--hero-dim);}
+.hdr-meta .icon-btn:active{background:var(--hero-line);color:var(--hero-fg);}
+.progress-bar{flex:1;height:5px;background:var(--hero-line);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:99px;transition:width .4s ease;}
+.progress-label{font-size:11px;font-weight:500;color:var(--hero-dim);white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+/* Section tabs */
+.tabs{display:flex;gap:7px;padding:0 var(--pr-safe) 12px var(--pl-safe);overflow-x:auto;background:var(--card);flex:none;scrollbar-width:none;}
+.tab-btn{flex:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--card);color:var(--muted-fg);cursor:pointer;transition:background .15s,color .15s,border-color .15s;white-space:nowrap;}
+.tab-btn.active{background:var(--fg);color:var(--bg);border-color:var(--fg);}
+.tab-amt{font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;opacity:.7;}
+.tab-btn.active .tab-amt{color:var(--gold);opacity:1;}
 
 /* Room sub-tabs */
-.room-tabs{display:flex;gap:5px;padding:8px 14px;overflow-x:auto;background:var(--muted2);border-bottom:1px solid var(--border);flex:none;align-items:center;}
-.rtab{display:flex;align-items:center;gap:3px;flex:none;}
-.rtab-btn{padding:5px 11px;border-radius:8px;font-size:12.5px;font-weight:600;border:none;cursor:pointer;transition:background .15s;white-space:nowrap;}
-.rtab-btn.active{background:var(--primary);color:#fff;}
-.rtab-btn:not(.active){background:var(--card);color:var(--fg);border:1px solid var(--border);}
-.rtab-remove{background:transparent;border:none;cursor:pointer;padding:3px;color:var(--muted-fg);display:flex;align-items:center;}
-.rtab-add{padding:5px 11px;border-radius:8px;font-size:12.5px;font-weight:600;background:transparent;border:1.5px dashed var(--border);color:var(--primary);cursor:pointer;white-space:nowrap;}
+.room-tabs{display:flex;gap:7px;padding:11px var(--pr-safe) 3px var(--pl-safe);overflow-x:auto;background:var(--bg);flex:none;align-items:center;scrollbar-width:none;}
+.rtab{display:flex;align-items:center;flex:none;border-radius:11px;border:1px solid var(--border);background:var(--card);overflow:hidden;transition:border-color .15s,background .15s;}
+.rtab:has(.rtab-btn.active){border-color:color-mix(in srgb,var(--primary) 45%,var(--border));background:var(--primary-soft);}
+.rtab-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:12.5px;font-weight:600;border:none;background:transparent;color:var(--muted-fg);cursor:pointer;white-space:nowrap;}
+.rtab-btn.active{color:var(--primary);}
+.rtab-amt{font-size:10.5px;font-family:'Geist Mono',monospace;opacity:.8;}
+.rtab-remove{background:transparent;border:none;cursor:pointer;padding:8px 9px 8px 0;color:var(--muted-fg);display:flex;align-items:center;opacity:.7;}
+.rtab-add{display:flex;align-items:center;gap:5px;flex:none;padding:8px 13px;border-radius:11px;font-size:12.5px;font-weight:600;background:transparent;border:1.5px dashed color-mix(in srgb,var(--primary) 40%,var(--border));color:var(--primary);cursor:pointer;white-space:nowrap;}
 
 /* Scroll area */
-.scroll-area{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.scroll-area{flex:1;overflow-y:auto;padding:14px var(--pr-safe) 14px var(--pl-safe);display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.scroll-area>*{flex:none;}
 
 /* Groups */
-.group-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.group-card.has-items{border-color:color-mix(in srgb,var(--primary) 40%,var(--border));}
-.group-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:transparent;border:none;cursor:pointer;width:100%;text-align:left;color:var(--fg);}
+.group-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);transition:border-color .2s;}
+.group-card.has-items{border-color:color-mix(in srgb,var(--primary) 36%,var(--border));}
+.group-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 15px;background:transparent;border:none;cursor:pointer;width:100%;text-align:left;color:var(--fg);}
+.chev{color:var(--muted-fg);flex:none;display:flex;transition:transform .2s ease;}
+.chev.open{transform:rotate(180deg);}
 .group-label{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.group-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--primary-soft);color:var(--primary);flex:none;}
-.group-reviewed{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--muted);color:var(--muted-fg);flex:none;}
-.group-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;}
+.group-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--primary-soft);color:var(--primary);flex:none;}
+.group-reviewed{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--muted);color:var(--muted-fg);flex:none;}
+.group-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums;}
 .group-total.has-val{color:var(--primary);}
 .group-total.no-val{color:var(--border);}
-.group-body{border-top:1px solid var(--border);animation:gbIn .16s ease;}
+.group-body{border-top:1px solid var(--border);animation:gbIn .18s ease;}
 @keyframes gbIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
 
 /* Line items */
-.item-row{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
+.item-row{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
 .group-body>.item-row:last-of-type{border-bottom:none;}
-.item-check{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--input-border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;margin-top:1px;}
+.item-check{flex:none;width:24px;height:24px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;margin-top:1px;color:var(--primary-fg);}
 .item-check.na{border-radius:99px;}
 .item-check.checked{background:var(--primary);border-color:var(--primary);}
 .item-body{flex:1;min-width:0;}
-.item-name{font-size:13.5px;font-weight:600;line-height:1.3;transition:color .15s;overflow-wrap:break-word;word-break:break-word;}
-.item-name.dim{color:var(--muted-fg);}
-.item-meta{font-size:11.5px;color:var(--muted-fg);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-.item-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;transition:color .15s;}
+.item-head{display:flex;align-items:center;gap:10px;min-width:0;}
+.item-tap{flex:1;min-width:0;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.item-name{font-size:13.5px;font-weight:600;line-height:1.35;transition:color .15s;overflow-wrap:break-word;word-break:break-word;}
+.item-name.dim{color:var(--muted-fg);font-weight:500;}
+.item-meta{font-size:11px;color:var(--muted-fg);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-family:'Geist Mono',monospace;}
+.item-total{font-size:14px;font-weight:700;white-space:nowrap;flex:none;transition:color .15s;font-variant-numeric:tabular-nums;}
 .item-total.has-val{color:var(--primary);}
 .item-total.no-val{color:var(--border);}
-.item-na-label{font-size:13px;font-style:italic;color:var(--muted-fg);}
-.item-na-label.checked{color:var(--primary);font-weight:500;font-style:normal;}
+.item-na-label{font-size:13px;font-weight:500;color:var(--muted-fg);cursor:pointer;user-select:none;-webkit-user-select:none;align-self:center;}
+.item-na-label.checked{color:var(--primary);font-weight:600;}
 
-/* Qty row */
-.qty-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
-.qty-label{font-size:12px;color:var(--muted-fg);}
-.qty-input{width:96px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:9px;padding:8px 10px;font-size:16px;font-family:'Geist Mono',monospace;text-align:right;outline:none;transition:border-color .15s;}
-.qty-input:focus{border-color:var(--primary);}
-.qty-unit{font-size:12px;color:var(--muted-fg);}
-.qty-del{flex:none;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.45;padding:4px;display:flex;align-items:center;justify-content:center;}
+/* Qty stepper */
+.qty-row{display:flex;align-items:center;gap:10px;margin-top:11px;flex-wrap:wrap;}
+.qty-stepper{display:flex;align-items:stretch;border:1px solid var(--input-border);border-radius:11px;background:var(--bg);overflow:hidden;}
+.qty-stepper:focus-within{border-color:var(--primary);box-shadow:var(--ring);}
+.qty-btn{width:38px;border:none;background:transparent;color:var(--muted-fg);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.qty-btn:active{background:var(--muted);color:var(--fg);}
+.qty-input{width:64px;height:40px;border:none;border-left:1px solid var(--input-border);border-right:1px solid var(--input-border);background:transparent;color:var(--fg);padding:0 6px;font-size:16px;font-family:'Geist Mono',monospace;text-align:center;outline:none;}
+.qty-unit{font-size:12px;font-weight:500;color:var(--muted-fg);}
+.qty-del{flex:none;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.5;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:8px;}
+.qty-del:active{opacity:1;color:var(--danger);background:var(--danger-soft);}
 
 /* Photos */
-.photos-section{margin-top:11px;padding-top:11px;border-top:1px dashed var(--border);}
-.photos-header{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.photos-section{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+.photos-header{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
 .photos-label{font-size:11px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.08em;}
-.serial-badge{margin-left:auto;font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;background:var(--good-soft);color:var(--good);padding:2px 8px;border-radius:6px;border:none;cursor:pointer;}
-.serial-add{margin-left:auto;font-size:11px;font-weight:600;background:transparent;color:var(--muted-fg);padding:2px 8px;border-radius:6px;border:1px dashed var(--border);cursor:pointer;white-space:nowrap;}
+.serial-badge{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;background:var(--good-soft);color:var(--good);padding:3px 9px;border-radius:7px;border:none;cursor:pointer;}
+.serial-add{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:transparent;color:var(--muted-fg);padding:3px 9px;border-radius:7px;border:1px dashed var(--input-border);cursor:pointer;white-space:nowrap;}
 .photos-grid{display:flex;gap:8px;flex-wrap:wrap;}
 .photo-thumb{position:relative;flex:none;}
-.photo-img{width:62px;height:62px;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block;}
-.photo-del{position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:20px;height:20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
-.photo-add{width:62px;height:62px;flex:none;border-radius:10px;border:1.5px dashed var(--primary);background:var(--primary-soft);color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-img{width:62px;height:62px;object-fit:cover;border-radius:11px;border:1px solid var(--border);display:block;}
+.photo-del{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:99px;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.photo-add{width:62px;height:62px;flex:none;border-radius:11px;border:1.5px dashed color-mix(in srgb,var(--primary) 50%,var(--border));background:var(--primary-soft);color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
 /* Add item button */
-.add-item-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border:none;border-top:1px solid var(--border);background:transparent;color:var(--muted-fg);font-size:12.5px;font-weight:600;cursor:pointer;}
+.add-item-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border:none;border-top:1px solid var(--border);background:var(--muted2);color:var(--muted-fg);font-size:12.5px;font-weight:600;cursor:pointer;transition:color .15s;}
+.add-item-btn:active{color:var(--primary);}
 
 /* Bottom nav */
-.bottom-nav{flex:none;background:var(--card);border-top:1px solid var(--border);display:flex;padding:6px 0;padding-bottom:calc(6px + var(--pb-safe));}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none;cursor:pointer;padding:5px 0;color:var(--muted-fg);transition:color .15s;}
-.nav-btn.active{color:var(--primary);}
+.bottom-nav{flex:none;background:var(--card);border-top:1px solid var(--border);display:flex;gap:6px;padding:8px 10px calc(8px + var(--pb-safe));}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none;border-radius:13px;cursor:pointer;padding:7px 0 6px;color:var(--muted-fg);transition:background .15s,color .15s;}
+.nav-btn.active{color:var(--primary);background:var(--primary-soft);}
 .nav-btn span{font-size:10.5px;font-weight:600;}
 
 /* Overlays */
-.overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;animation:fadeIn .2s ease;}
+.overlay-bg{position:fixed;inset:0;background:rgba(10,14,12,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:40;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-.panel-slide{position:fixed;top:0;left:0;height:100%;width:290px;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(-100%);}
+.panel-slide{position:fixed;top:0;left:0;height:100%;width:320px;max-width:88vw;background:var(--card);z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(-100%);}
 .panel-slide.open{transform:translateX(0);animation:panelIn .28s cubic-bezier(.4,0,.2,1);}
 @keyframes panelIn{from{transform:translateX(-100%);}to{transform:translateX(0);}}
-.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:24px;border-top-right-radius:24px;z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);max-height:82vh;animation:sheetIn .3s cubic-bezier(.32,.72,0,1);}
+.panel-head{padding:calc(var(--pt-safe) + 16px) 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
+.panel-foot{padding:14px 16px calc(14px + var(--pb-safe));border-top:1px solid var(--border);}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:26px;border-top-right-radius:26px;z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);max-height:82vh;animation:sheetIn .3s cubic-bezier(.32,.72,0,1);}
 @keyframes sheetIn{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .sheet-handle{display:flex;justify-content:center;padding:10px 0 4px;}
 .sheet-handle-bar{width:38px;height:4px;border-radius:99px;background:var(--border);}
+.sheet-head{padding:6px 18px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sheet-title{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em;}
+.sheet-sub{margin:2px 0 0;font-size:12px;color:var(--muted-fg);}
 .center-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;}
-.modal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;width:100%;max-width:320px;box-shadow:var(--shadow-lg);animation:modalIn .22s cubic-bezier(.32,.72,0,1);}
+.modal-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:22px;width:100%;max-width:330px;box-shadow:var(--shadow-lg);animation:modalIn .22s cubic-bezier(.32,.72,0,1);}
 @keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
 
+/* Fields & search */
+.field-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-fg);}
+.field-input{width:100%;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:11px;padding:11px 12px;font-size:15px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.field-input:focus{border-color:var(--primary);box-shadow:var(--ring);}
+.search-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--input-border);border-radius:11px;padding:10px 12px;background:var(--bg);color:var(--muted-fg);transition:border-color .15s,box-shadow .15s;}
+.search-wrap:focus-within{border-color:var(--primary);box-shadow:var(--ring);}
+.search-wrap input{flex:1;min-width:0;border:none;background:transparent;color:var(--fg);font-size:13.5px;outline:none;}
+.seg{display:flex;gap:4px;padding:4px;background:var(--muted);border-radius:11px;}
+.seg-btn{flex:1;padding:8px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:transparent;color:var(--muted-fg);transition:background .15s,color .15s;}
+.seg-btn.active{background:var(--card);color:var(--fg);box-shadow:var(--shadow);}
+.empty-note{text-align:center;color:var(--muted-fg);font-size:13.5px;padding:32px 20px;}
+
 /* Summary */
-.sum-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.sum-header{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--primary-soft);}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.sum-header{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;background:var(--primary-soft);}
 .sum-header-label{font-size:13px;font-weight:700;color:var(--primary);}
 .sum-header-total{font-size:14px;font-weight:700;color:var(--primary);}
-.sum-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--border);}
+.sum-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 15px;border-top:1px solid var(--border);}
 .sum-row-name{font-size:13px;font-weight:500;}
-.sum-row-sub{font-size:11.5px;color:var(--muted-fg);margin-top:1px;}
-.sum-row-total{font-size:13.5px;font-weight:600;white-space:nowrap;}
+.sum-row-sub{font-size:11px;color:var(--muted-fg);margin-top:2px;font-family:'Geist Mono',monospace;}
+.sum-row-total{font-size:13.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;}
 
 /* Deal analyzer */
-.deal-input-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px;}
+.deal-input-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px;box-shadow:var(--shadow);}
 .deal-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-fg);}
 .deal-input-wrap{display:flex;align-items:center;gap:3px;margin-top:5px;}
 .deal-dollar{font-size:18px;color:var(--muted-fg);}
 .deal-num-input{width:100%;border:none;background:transparent;color:var(--fg);font-size:20px;font-weight:600;font-family:'Geist Mono',monospace;outline:none;padding:0;}
-.deal-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;}
+.deal-row{display:flex;justify-content:space-between;align-items:center;padding:11px 15px;}
 .deal-row-label{font-size:13px;color:var(--muted-fg);}
-.deal-row-val{font-size:13px;font-weight:600;}
+.deal-row-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;}
 
 /* Price list */
 .price-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
-.price-input-wrap{display:flex;align-items:center;gap:3px;border:1px solid var(--input-border);border-radius:9px;padding:6px 9px;background:var(--bg);}
+.price-input-wrap{display:flex;align-items:center;gap:3px;border:1px solid var(--input-border);border-radius:10px;padding:7px 9px;background:var(--bg);transition:border-color .15s,box-shadow .15s;}
+.price-input-wrap:focus-within{border-color:var(--primary);box-shadow:var(--ring);}
 .price-dollar{font-size:13px;color:var(--muted-fg);}
 .price-input{width:76px;border:none;background:transparent;color:var(--fg);font-size:16px;font-family:'Geist Mono',monospace;text-align:right;outline:none;}
 
 /* Projects list */
-.proj-row{display:flex;align-items:center;border-bottom:1px solid var(--border);}
+.proj-row{display:flex;align-items:center;border-bottom:1px solid var(--border);transition:background .15s;}
 .proj-row.active{background:var(--primary-soft);}
+.proj-main{flex:1;text-align:left;background:transparent;border:none;cursor:pointer;padding:13px 16px;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.proj-name{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--fg);min-width:0;}
+.proj-row.active .proj-name{color:var(--primary);}
+.proj-dot{width:7px;height:7px;border-radius:99px;background:var(--primary);flex:none;}
+.proj-sub{font-size:11.5px;color:var(--muted-fg);}
+.proj-del{background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.5;padding:14px;display:flex;}
+.proj-del:active{opacity:1;color:var(--danger);}
 
 /* Utils */
 .txt-primary{color:var(--primary);}
 .txt-muted{color:var(--muted-fg);}
-.btn-primary{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:12px;border-radius:11px;background:var(--primary);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;}
-.btn-ghost{width:100%;padding:11px;border-radius:11px;background:transparent;border:1px solid var(--border);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer;}
-.btn-danger{width:100%;padding:11px;border-radius:11px;background:transparent;border:1px solid #fecaca;color:#ef4444;font-size:13.5px;font-weight:600;cursor:pointer;}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:13px;background:var(--primary);color:var(--primary-fg);border:none;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px -10px color-mix(in srgb,var(--primary) 75%,transparent);transition:transform .1s;}
+.btn-primary:active{transform:scale(.985);}
+.btn-ghost{width:100%;padding:12px;border-radius:13px;background:transparent;border:1px solid var(--border);color:var(--fg);font-size:13.5px;font-weight:600;cursor:pointer;}
+.btn-danger{width:100%;padding:12px;border-radius:13px;background:transparent;border:1px solid color-mix(in srgb,var(--danger) 35%,var(--border));color:var(--danger);font-size:13.5px;font-weight:600;cursor:pointer;}
 
 /* Toast */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;font-weight:600;padding:10px 18px;border-radius:11px;box-shadow:var(--shadow-lg);z-index:90;white-space:nowrap;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;gap:12px;}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;font-weight:600;padding:11px 18px;border-radius:13px;box-shadow:var(--shadow-lg);z-index:90;white-space:nowrap;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);}
 .toast.has-action{pointer-events:auto;}
-.toast-action{background:transparent;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:.04em;}
-
-/* Icon helpers */
-.icon{display:block;flex-shrink:0;}
+.toast-action{background:transparent;border:none;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;padding:0;text-transform:uppercase;letter-spacing:.04em;}
+[data-theme="dark"] .toast-action{color:#156A50;}
 </style>
 </head>
 <body>
@@ -388,6 +450,7 @@ let S = {
   draftItem: {name:'', cost:'', unit:'ea.'},
   priceScope: 'project',
   priceSearch: '',
+  projSearch: '',
   promptModal: null, // { title, placeholder, value, callback }
   dealData: {},      // per project, stored in project
   // Current project
@@ -655,6 +718,13 @@ const ICONS = {
   pencil:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
   export:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
   search:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>`,
+  sun:      `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.4"/><line x1="12" y1="2" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="22"/><line x1="2" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.7" y2="17.3"/><line x1="17.3" y1="6.7" x2="19.1" y2="4.9"/></svg>`,
+  moon:     `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`,
+  chevron:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+  minus:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  checkSm:  `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  plusSm:   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  xs:       `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
   trend:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
   file:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`,
   pic:      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
@@ -667,33 +737,32 @@ function renderHeader() {
   const grand = calcGrandTotal();
   const {total, done} = calcProgress();
   const pct = total ? Math.round(done/total*100) : 0;
-  const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   return `
   <div class="hdr">
     <div class="hdr-inner">
-      <button class="icon" onclick="openProjects()" style="background:none;border:none;cursor:pointer;color:var(--fg);padding:4px;">${ICONS.menu}</button>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <img src="logo.png" alt="Spark" style="height:18px;opacity:.85;" onerror="this.style.display='none'">
-        <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted-fg);text-transform:uppercase;">Estimator</span>
+      <button class="icon-btn" onclick="openProjects()" aria-label="Projects" style="color:var(--fg);">${ICONS.menu}</button>
+      <div class="brand">
+        <img src="logo.png" alt="Spark Group" onerror="this.style.display='none'">
+        <span class="brand-name"><em>Estimator</em></span>
       </div>
-      <div style="display:flex;align-items:center;gap:2px;">
-        <button onclick="openRooms()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:6px;">${ICONS.rooms}</button>
-        <button onclick="openSettings()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:6px;">${ICONS.settings}</button>
-        <button onclick="toggleTheme()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:6px;font-size:16px;">${theme==='dark'?'☀️':'🌙'}</button>
+      <div class="hdr-actions">
+        <button class="icon-btn" onclick="openRooms()" aria-label="Manage rooms">${ICONS.rooms}</button>
+        <button class="icon-btn" onclick="openSettings()" aria-label="Price settings">${ICONS.settings}</button>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">${dark ? ICONS.sun : ICONS.moon}</button>
       </div>
     </div>
     <div class="hdr-total">
       <div class="hdr-total-label">Running total</div>
       <div class="hdr-total-num mono">${fmt$(grand)}</div>
       <div class="hdr-meta">
-        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
-          <span style="font-size:12.5px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(S.projectName)}</span>
-          <button onclick="renameProject()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:0;flex-shrink:0;">${ICONS.pencil}</button>
-        </div>
-        <button onclick="openExport()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:2px;flex-shrink:0;">${ICONS.export}</button>
+        <span class="hdr-proj-name">${esc(S.projectName)}</span>
+        <button class="icon-btn" onclick="renameProject()" aria-label="Rename project">${ICONS.pencil}</button>
+        <span style="flex:1;"></span>
+        <button class="icon-btn" onclick="openExport()" aria-label="Export estimate">${ICONS.export}</button>
       </div>
-      <div class="hdr-meta" style="margin-top:8px;">
+      <div class="hdr-meta" style="margin-top:6px;">
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         <span class="progress-label">${done}/${total} groups</span>
       </div>
@@ -731,11 +800,11 @@ function renderRoomTabs(stId) {
       const active = i === S.roomIdx;
       const minKeep = stId === 'bathroom' ? 1 : 0;
       return `<div class="rtab">
-        <button class="rtab-btn${active?' active':''}" onclick="switchRoom(${i})">${esc(inst.name)}${tot>0?` <span style="font-size:11px;opacity:.85">${fmt$(tot)}</span>`:''}</button>
-        ${insts.length > minKeep ? `<button class="rtab-remove" onclick="removeRoom('${stId}',${i})" aria-label="Remove ${esc(inst.name)}">${ICONS.close}</button>` : ''}
+        <button class="rtab-btn${active?' active':''}" onclick="switchRoom(${i})">${esc(inst.name)}${tot>0?`<span class="rtab-amt mono">${fmt$(tot)}</span>`:''}</button>
+        ${insts.length > minKeep ? `<button class="rtab-remove" onclick="removeRoom('${stId}',${i})" aria-label="Remove ${esc(inst.name)}">${ICONS.xs}</button>` : ''}
       </div>`;
     }).join('')}
-    <button class="rtab-add" onclick="addRoom('${stId}')">+ Add</button>
+    <button class="rtab-add" onclick="addRoom('${stId}')">${ICONS.plusSm} Add</button>
   </div>`;
 }
 
@@ -770,21 +839,24 @@ function renderItem(instId, itemId, isCustom, custDef) {
 
   return `
   <div class="item-row" data-key="${key}">
-    <button class="item-check${s.checked?' checked':''}" onclick="toggleItem('${key}')" style="margin-top:1px;">${s.checked?ICONS.check.replace('currentColor','#fff'):''}</button>
+    <button class="item-check${s.checked?' checked':''}" onclick="toggleItem('${key}')" aria-label="${s.checked?'Uncheck':'Check'} ${esc(name)}">${s.checked?ICONS.check:''}</button>
     <div class="item-body">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-        <div style="flex:1;min-width:0;">
+      <div class="item-head">
+        <div class="item-tap" onclick="toggleItem('${key}')">
           <div class="item-name${s.checked?'':' dim'}">${esc(name)}</div>
           <div class="item-meta">${costLabel}</div>
         </div>
         <span class="item-total ${tot>0?'has-val':'no-val'} mono">${tot>0?fmt$(tot):'—'}</span>
-        <button class="qty-del" onclick="deleteItem('${key}')" title="Remove item">${ICONS.trash}</button>
+        <button class="qty-del" onclick="deleteItem('${key}')" aria-label="Remove ${esc(name)}">${ICONS.trash}</button>
       </div>
       ${s.checked ? `
       <div class="qty-row">
-        <span class="qty-label">Qty</span>
-        <input class="qty-input" type="number" inputmode="decimal" min="0" placeholder="0"
-          value="${esc(s.qty)}" oninput="updateQty('${key}',this.value)">
+        <div class="qty-stepper">
+          <button class="qty-btn" onclick="stepQty('${key}',-1)" aria-label="Decrease quantity">${ICONS.minus}</button>
+          <input class="qty-input" type="number" inputmode="decimal" min="0" placeholder="0"
+            value="${esc(s.qty)}" oninput="updateQty('${key}',this.value)">
+          <button class="qty-btn" onclick="stepQty('${key}',1)" aria-label="Increase quantity">${ICONS.plus}</button>
+        </div>
         <span class="qty-unit">${esc(unit)}</span>
       </div>
       ${flags.serial ? renderPhotos(key) : ''}
@@ -801,10 +873,10 @@ function renderNAItem(instId, gid) {
   const s = S.items[key] || {checked:false};
   return `
   <div class="item-row" data-key="${key}">
-    <button class="item-check na${s.checked?' checked':''}" onclick="toggleNA('${key}')">
-      ${s.checked ? ICONS.check.replace('currentColor','#fff') : ''}
+    <button class="item-check na${s.checked?' checked':''}" onclick="toggleNA('${key}')" aria-label="No action needed">
+      ${s.checked ? ICONS.check : ''}
     </button>
-    <span class="item-na-label${s.checked?' checked':''}">No action needed</span>
+    <span class="item-na-label${s.checked?' checked':''}" onclick="toggleNA('${key}')">No action needed</span>
   </div>`;
 }
 
@@ -821,13 +893,13 @@ function renderPhotos(key) {
       <span class="photos-label">Serial photo</span>
       ${serial
         ? `<button class="serial-badge" onclick="editSerial('${key}')" title="Edit serial number">SN ${esc(serial)}</button>`
-        : `<button class="serial-add" onclick="editSerial('${key}')">+ serial no.</button>`}
+        : `<button class="serial-add" onclick="editSerial('${key}')">${ICONS.plusSm} Serial no.</button>`}
     </div>
     <div class="photos-grid">
       ${photos.map((ph,i) => `
       <div class="photo-thumb">
         <img class="photo-img" src="${ph.dataUrl}" loading="lazy">
-        <button class="photo-del" onclick="removePhoto('${key}',${i})">×</button>
+        <button class="photo-del" onclick="removePhoto('${key}',${i})" aria-label="Remove photo">${ICONS.xs}</button>
       </div>`).join('')}
       <button class="photo-add" onclick="addPhoto('${key}')">${ICONS.plus}</button>
     </div>
@@ -857,10 +929,10 @@ function renderGroup(stId, instId, gid) {
   <div class="group-card${checkedCount>0||naChecked?' has-items':''}" data-custkey="${custKey}">
     <button class="group-header" onclick="toggleGroup('${custKey}')">
       <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0;overflow:hidden;">
-        <span style="color:var(--muted-fg);flex:none;">${exp ? ICONS.up : ICONS.down}</span>
+        <span class="chev${exp ? ' open' : ''}">${ICONS.chevron}</span>
         <span class="group-label">${esc(label)}</span>
-        ${showBadge ? `<span class="group-badge">${checkedCount} ✓</span>` : ''}
-        ${naChecked ? `<span class="group-reviewed">reviewed</span>` : ''}
+        ${showBadge ? `<span class="group-badge">${ICONS.checkSm}${checkedCount}</span>` : ''}
+        ${naChecked ? `<span class="group-reviewed">Reviewed</span>` : ''}
       </div>
       <span class="group-total ${tot>0?'has-val':'no-val'} mono">${tot>0?fmt$(tot):'—'}</span>
     </button>
@@ -915,6 +987,7 @@ function renderWalk() {
 // =============================================================
 function renderSummary() {
   const grand = calcGrandTotal();
+  const photoCount = Object.values(S.photos).reduce((s,a)=>s+(a?.length||0),0);
   const sections = [];
 
   for (const [stId, stDef] of Object.entries(SECTION_TYPES)) {
@@ -950,8 +1023,8 @@ function renderSummary() {
       <p style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-fg);margin:0 0 4px;">Total Estimate</p>
       <p class="mono" style="font-size:38px;font-weight:700;letter-spacing:-1.5px;margin:0;">${fmt$(grand)}</p>
       <p style="font-size:12.5px;color:var(--muted-fg);margin:4px 0 0;">${esc(S.projectName)}</p>
-      <button class="btn-primary" style="margin-top:14px;" onclick="openExport()">
-        ${ICONS.export} Export ZIP (Excel + Photos)
+      <button class="btn-primary" style="margin-top:16px;" onclick="openExport()">
+        ${ICONS.export} Export ${photoCount > 0 ? 'ZIP (Excel + Photos)' : 'Excel Report'}
       </button>
     </div>
     ${sections.length === 0
@@ -985,8 +1058,8 @@ function calcDeal() {
   const profit  = arv - basis;
   const roi     = basis > 0 ? (profit / basis * 100) : 0;
   const verdict = profit > 15000 ? 'Strong deal' : profit > 0 ? 'Thin margin' : 'Losing deal';
-  const vColor  = profit > 15000 ? 'var(--good)' : profit > 0 ? '#d97706' : '#ef4444';
-  const profitColor = profit > 0 ? 'var(--good)' : '#ef4444';
+  const vColor  = profit > 15000 ? 'var(--good)' : profit > 0 ? 'var(--warn)' : 'var(--danger)';
+  const profitColor = profit > 0 ? 'var(--good)' : 'var(--danger)';
   const total = arv || (basis > 0 ? basis * 1.2 : 100000);
   const purW  = total ? Math.min((purchase/total)*100,100) : 0;
   const repW  = total ? Math.min((repairs/total)*100,100) : 0;
@@ -1063,16 +1136,16 @@ function renderDeal() {
         </div>
       </div>
       <div style="margin-top:14px;display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--muted);">
-        <div id="deal-bar-pur" style="width:${purW}%;background:#71717a;transition:width .4s;"></div>
+        <div id="deal-bar-pur" style="width:${purW}%;background:var(--muted-fg);transition:width .4s;"></div>
         <div id="deal-bar-rep" style="width:${repW}%;background:var(--primary);transition:width .4s;"></div>
-        <div id="deal-bar-hol" style="width:${holW}%;background:#a1a1aa;transition:width .4s;"></div>
+        <div id="deal-bar-hol" style="width:${holW}%;background:var(--gold);transition:width .4s;"></div>
         <div id="deal-bar-pro" style="width:${proW}%;background:var(--good);transition:width .4s;"></div>
       </div>
       <div style="margin-top:9px;display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted-fg);">
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:#71717a;display:inline-block;"></span>Purchase</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--primary);display:inline-block;"></span>Repairs</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:#a1a1aa;display:inline-block;"></span>Carry</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--good);display:inline-block;"></span>Profit</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--muted-fg);display:inline-block;"></span>Purchase</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--primary);display:inline-block;"></span>Repairs</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--gold);display:inline-block;"></span>Carry</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:3px;background:var(--good);display:inline-block;"></span>Profit</span>
       </div>
     </div>
     <div style="height:80px;"></div>
@@ -1104,35 +1177,69 @@ function renderNav() {
 // =============================================================
 // RENDER - OVERLAYS
 // =============================================================
-function renderProjectsPanel() {
-  const list = loadAllProjects();
-  const rows = list.map(p => {
+// Grand total for a saved project snapshot — used in the projects list so
+// agents can tell properties apart at a glance.
+function calcProjectTotal(proj) {
+  const priceOf = id => proj.projPrices?.[id] ?? S.globalPrices[id] ?? (PRICES[id]?.[1] ?? 0);
+  const customDefs = {};
+  for (const arr of Object.values(proj.customItems || {}))
+    for (const c of arr) customDefs[c.id] = c;
+  let t = 0;
+  for (const [key, st] of Object.entries(proj.items || {})) {
+    if (key.startsWith('NA:') || !st?.checked || proj.deletedItems?.[key]) continue;
+    const qty = parseFloat(st.qty);
+    if (!qty || qty <= 0) continue;
+    const [, itemId] = parseKey(key);
+    const def = customDefs[itemId];
+    t += qty * (def ? def.cost : priceOf(itemId));
+  }
+  return t;
+}
+
+function projectRowsHTML(list) {
+  const q = (S.projSearch || '').trim().toLowerCase();
+  const filtered = q ? list.filter(p => (p.name || '').toLowerCase().includes(q)) : list;
+  if (!filtered.length)
+    return `<p class="empty-note">${q ? 'No projects match your search' : 'No saved projects'}</p>`;
+  return filtered.map(p => {
     const active = p.id === S.projectId;
+    const tot = active ? calcGrandTotal() : calcProjectTotal(p);
     return `
     <div class="proj-row${active?' active':''}">
-      <button onclick="switchProject('${p.id}')" style="flex:1;text-align:left;background:transparent;border:none;cursor:pointer;padding:14px 16px;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:13.5px;font-weight:600;${active?'color:var(--primary)':''}">${esc(p.name)}</span>
-          ${active?`<span style="width:7px;height:7px;border-radius:99px;background:var(--primary);flex:none;"></span>`:''}
-        </div>
-        <span style="font-size:11.5px;color:var(--muted-fg);">${fmtDate(p.savedAt)}</span>
+      <button class="proj-main" onclick="switchProject('${p.id}')">
+        <span class="proj-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name)}</span>${active?'<span class="proj-dot"></span>':''}</span>
+        <span class="proj-sub">${fmtDate(p.savedAt)} · <span class="mono">${fmt$(tot)}</span></span>
       </button>
-      ${!active?`<button onclick="deleteProject('${p.id}')" style="background:transparent;border:none;cursor:pointer;color:var(--muted-fg);opacity:.5;padding:14px;">${ICONS.trash}</button>`:''}
+      ${!active?`<button class="proj-del" onclick="deleteProject('${p.id}')" aria-label="Delete ${esc(p.name)}">${ICONS.trash}</button>`:''}
     </div>`;
   }).join('');
+}
 
+function renderProjectsPanel() {
+  const list = loadAllProjects();
   return `
   <div class="overlay-bg" onclick="closeOverlay()"></div>
   <div class="panel-slide open">
-    <div style="padding:calc(var(--pt-safe) + 14px) 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:16px;font-weight:700;">Projects</span>
-      <button onclick="closeOverlay()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:4px;">${ICONS.close}</button>
+    <div class="panel-head">
+      <span class="panel-title">Projects</span>
+      <button class="icon-btn" onclick="closeOverlay()" aria-label="Close">${ICONS.close}</button>
     </div>
-    <div style="flex:1;overflow-y:auto;">${rows.length ? rows : '<p style="text-align:center;color:var(--muted-fg);font-size:14px;padding:30px;">No saved projects</p>'}</div>
-    <div style="padding:14px 16px calc(14px + var(--pb-safe));border-top:1px solid var(--border);">
+    ${list.length > 1 ? `
+    <div style="padding:12px 14px 10px;">
+      <div class="search-wrap">${ICONS.search}<input value="${esc(S.projSearch)}" oninput="updateProjSearch(this.value)" placeholder="Search ${list.length} projects"></div>
+    </div>` : ''}
+    <div style="flex:1;overflow-y:auto;"><div id="proj-rows">${projectRowsHTML(list)}</div></div>
+    <div class="panel-foot">
       <button class="btn-primary" onclick="newProject()">${ICONS.plus} New Project</button>
     </div>
   </div>`;
+}
+
+function updateProjSearch(v) {
+  S.projSearch = v;
+  // Patch only the list so the search input keeps focus while typing
+  const el = document.getElementById('proj-rows');
+  if (el) el.innerHTML = projectRowsHTML(loadAllProjects()); else render();
 }
 
 function renderRoomsSheet() {
@@ -1148,7 +1255,7 @@ function renderRoomsSheet() {
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
         <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-fg);">${rt.label}</span>
-        <button onclick="addRoom('${rt.stId}')" style="display:flex;align-items:center;gap:5px;background:var(--primary-soft);color:var(--primary);border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;">${ICONS.plus} Add</button>
+        <button onclick="addRoom('${rt.stId}')" style="display:flex;align-items:center;gap:5px;background:var(--primary-soft);color:var(--primary);border:none;border-radius:9px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;">${ICONS.plusSm} Add</button>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${insts.length === 0
@@ -1157,7 +1264,7 @@ function renderRoomsSheet() {
           <div style="display:flex;align-items:center;gap:7px;background:var(--muted);border:1px solid var(--border);border-radius:10px;padding:8px 11px;">
             <button onclick="renameRoom('${rt.stId}',${i})" style="font-size:13px;font-weight:500;background:none;border:none;cursor:pointer;color:var(--fg);padding:0;">${esc(inst.name)}</button>
             ${insts.length > rt.minInstances
-              ? `<button onclick="removeRoom('${rt.stId}',${i})" style="background:transparent;border:none;cursor:pointer;color:var(--muted-fg);padding:0;display:flex;">${ICONS.close}</button>`
+              ? `<button onclick="removeRoom('${rt.stId}',${i})" aria-label="Remove ${esc(inst.name)}" style="background:transparent;border:none;cursor:pointer;color:var(--muted-fg);padding:2px;display:flex;">${ICONS.xs}</button>`
               : ''}
           </div>`).join('')}
       </div>
@@ -1168,9 +1275,9 @@ function renderRoomsSheet() {
   <div class="overlay-bg" onclick="closeOverlay()"></div>
   <div class="sheet" style="max-height:72%;">
     <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
-    <div style="padding:6px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
-      <div><p style="margin:0;font-size:16px;font-weight:700;">Rooms</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-fg);">Add or remove for this property</p></div>
-      <button onclick="closeOverlay()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:4px;">${ICONS.close}</button>
+    <div class="sheet-head">
+      <div><p class="sheet-title">Rooms</p><p class="sheet-sub">Add or remove for this property</p></div>
+      <button class="icon-btn" onclick="closeOverlay()" aria-label="Close">${ICONS.close}</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px;padding-bottom:calc(16px + var(--pb-safe));">
       ${sections}
@@ -1202,26 +1309,22 @@ function renderPriceRows() {
 }
 
 function renderSettingsSheet() {
-  const activeTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:var(--card);border:none;cursor:pointer;box-shadow:var(--shadow);color:var(--fg);`;
-  const inactiveTabStyle = `flex:1;padding:7px;border-radius:7px;font-size:13px;font-weight:600;background:transparent;border:none;cursor:pointer;color:var(--muted-fg);`;
-  const projStyle = (scope) => scope===S.priceScope ? activeTabStyle : inactiveTabStyle;
-
   return `
   <div class="overlay-bg" onclick="closeOverlay()"></div>
   <div class="sheet" style="max-height:82%;">
     <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
-    <div style="padding:6px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
-      <div><p style="margin:0;font-size:16px;font-weight:700;">Price Schedule</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-fg);">Edit unit costs · changes are saved instantly</p></div>
-      <button onclick="closeOverlay()" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:4px;">${ICONS.close}</button>
+    <div class="sheet-head">
+      <div><p class="sheet-title">Price Schedule</p><p class="sheet-sub">Edit unit costs · changes are saved instantly</p></div>
+      <button class="icon-btn" onclick="closeOverlay()" aria-label="Close">${ICONS.close}</button>
     </div>
     <div style="padding:12px 16px 8px;">
-      <div style="display:flex;gap:4px;padding:4px;background:var(--muted);border-radius:9px;">
-        <button onclick="setPriceScope('project')" style="${projStyle('project')}">This project</button>
-        <button onclick="setPriceScope('global')" style="${projStyle('global')}">All projects</button>
+      <div class="seg">
+        <button class="seg-btn${S.priceScope==='project'?' active':''}" onclick="setPriceScope('project')">This project</button>
+        <button class="seg-btn${S.priceScope==='global'?' active':''}" onclick="setPriceScope('global')">All projects</button>
       </div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;border:1px solid var(--input-border);border-radius:10px;padding:9px 11px;background:var(--bg);">
+      <div class="search-wrap" style="margin-top:10px;">
         ${ICONS.search}
-        <input value="${esc(S.priceSearch)}" oninput="updatePriceSearch(this.value)" placeholder="Search 100+ line items" style="flex:1;border:none;background:transparent;color:var(--fg);font-size:13.5px;outline:none;">
+        <input value="${esc(S.priceSearch)}" oninput="updatePriceSearch(this.value)" placeholder="Search 100+ line items">
       </div>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 16px;">
@@ -1238,16 +1341,19 @@ function renderExportModal() {
   const grand = calcGrandTotal();
   const photoCount = Object.values(S.photos).reduce((s,a)=>s+(a?.length||0),0);
   const baseName = `Repair-Estimate-${S.projectName.replace(/[^a-z0-9]/gi,'_')}-${new Date().toISOString().split('T')[0]}`;
+  const isZip = photoCount > 0;
 
   return `
   <div class="overlay-bg" onclick="closeOverlay()"></div>
   <div class="center-modal">
     <div class="modal-card">
-      <div style="width:46px;height:46px;border-radius:13px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${ICONS.export}</div>
+      <div style="width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${ICONS.export}</div>
       <p style="margin:0;font-size:17px;font-weight:700;">Export estimate</p>
-      <p style="margin:4px 0 16px;font-size:12.5px;color:var(--muted-fg);line-height:1.45;">Bundles an Excel cost breakdown and every walkthrough photo into one ZIP file.</p>
-      <div style="background:var(--muted2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;">${ICONS.file}<span style="font-size:12.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Geist Mono',monospace;">${esc(baseName)}.xlsx</span></div>
+      <p style="margin:4px 0 16px;font-size:12.5px;color:var(--muted-fg);line-height:1.45;">${isZip
+        ? `Bundles the Excel cost breakdown and all ${photoCount} walkthrough photo${photoCount!==1?'s':''} into one ZIP file.`
+        : 'Generates a formatted Excel cost breakdown. Attach photos and they are bundled into a ZIP automatically.'}</p>
+      <div style="background:var(--muted2);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;">${ICONS.file}<span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Geist Mono',monospace;">${esc(baseName)}.${isZip?'zip':'xlsx'}</span></div>
         <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-top:1px solid var(--border);">${ICONS.pic}<span style="font-size:12.5px;color:var(--muted-fg);">${photoCount} photo${photoCount!==1?'s':''} attached</span></div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-top:1px solid var(--border);background:var(--card);">
           <span style="font-size:13px;font-weight:700;">Grand total</span>
@@ -1256,7 +1362,7 @@ function renderExportModal() {
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn-ghost" style="flex:1;" onclick="closeOverlay()">Cancel</button>
-        <button class="btn-primary" style="flex:1.4;" onclick="doExport()">Download ZIP</button>
+        <button class="btn-primary" style="flex:1.4;" onclick="doExport()">Download ${isZip?'ZIP':'Excel'}</button>
       </div>
     </div>
   </div>`;
@@ -1274,22 +1380,22 @@ function renderAddItemModal() {
     <div class="modal-card">
       <p style="margin:0;font-size:17px;font-weight:700;">Add line item</p>
       <p style="margin:4px 0 16px;font-size:12.5px;color:var(--muted-fg);">to <strong>${esc(gLabel)}</strong>${instLabel?' · '+esc(instLabel):''}</p>
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-fg);">Item name</label>
-      <input id="draft-name" value="${esc(S.draftItem.name)}" oninput="S.draftItem.name=this.value" placeholder="e.g. Skylight replacement"
-        style="width:100%;margin:5px 0 13px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;">
+      <label class="field-label" for="draft-name">Item name</label>
+      <input id="draft-name" class="field-input" value="${esc(S.draftItem.name)}" oninput="S.draftItem.name=this.value" placeholder="e.g. Skylight replacement"
+        style="margin:6px 0 13px;font-size:14px;">
       <div style="display:flex;gap:10px;margin-bottom:18px;">
         <div style="flex:1;">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-fg);">Unit cost</label>
-          <div style="display:flex;align-items:center;gap:3px;margin-top:5px;border:1px solid var(--input-border);background:var(--bg);border-radius:10px;padding:10px 12px;">
+          <label class="field-label" for="draft-cost">Unit cost</label>
+          <div class="search-wrap" style="margin-top:6px;padding:10px 12px;">
             <span style="font-size:14px;color:var(--muted-fg);font-family:'Geist Mono',monospace;">$</span>
             <input id="draft-cost" type="number" value="${esc(S.draftItem.cost)}" oninput="S.draftItem.cost=this.value" placeholder="0"
-              style="width:100%;border:none;background:transparent;color:var(--fg);font-size:14px;font-family:'Geist Mono',monospace;outline:none;">
+              style="font-size:14px;font-family:'Geist Mono',monospace;">
           </div>
         </div>
         <div style="width:96px;">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-fg);">Unit</label>
-          <input id="draft-unit" value="${esc(S.draftItem.unit)}" oninput="S.draftItem.unit=this.value"
-            style="width:100%;margin-top:5px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;">
+          <label class="field-label" for="draft-unit">Unit</label>
+          <input id="draft-unit" class="field-input" value="${esc(S.draftItem.unit)}" oninput="S.draftItem.unit=this.value"
+            style="margin-top:6px;font-size:14px;">
         </div>
       </div>
       <div style="display:flex;gap:10px;">
@@ -1314,10 +1420,10 @@ function renderPromptModal() {
   <div class="center-modal">
     <div class="modal-card">
       <p style="margin:0 0 14px;font-size:17px;font-weight:700;">${esc(pm.title)}</p>
-      <input id="prompt-input" value="${esc(pm.value||'')}" placeholder="${esc(pm.placeholder||'')}"
+      <input id="prompt-input" class="field-input" value="${esc(pm.value||'')}" placeholder="${esc(pm.placeholder||'')}"
         oninput="S.promptModal.value=this.value"
         onkeydown="if(event.key==='Enter')confirmPrompt();if(event.key==='Escape')cancelPrompt()"
-        style="width:100%;margin-bottom:14px;border:1px solid var(--input-border);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:15px;outline:none;">
+        style="margin-bottom:14px;">
       <div style="display:flex;gap:10px;">
         <button class="btn-ghost" style="flex:1;" onclick="cancelPrompt()">Cancel</button>
         <button class="btn-primary" style="flex:1.4;" onclick="confirmPrompt()">Save</button>
@@ -1456,6 +1562,19 @@ function toggleNA(key) {
 function updateQty(key, val) {
   if (!S.items[key]) S.items[key] = {checked:true, qty:''};
   S.items[key].qty = val;
+  scheduleSave();
+  updateTotalsInPlace(key);
+}
+
+// Stepper buttons beside the qty input — patches the input in place so the
+// row keeps focus and no full re-render happens mid-entry.
+function stepQty(key, delta) {
+  if (!S.items[key]) S.items[key] = {checked:true, qty:''};
+  const cur = parseFloat(S.items[key].qty) || 0;
+  const next = Math.max(0, cur + delta);
+  S.items[key].qty = next > 0 ? String(next) : '';
+  const inp = document.querySelector(`[data-key="${key}"] .qty-input`);
+  if (inp) inp.value = S.items[key].qty;
   scheduleSave();
   updateTotalsInPlace(key);
 }
@@ -1628,7 +1747,7 @@ async function scanSerial(key, dataUrl) {
       if (!S.overlay) render();
       showToast(`Serial detected: ${serial}`, {label:'Edit', fn:() => editSerial(key)});
     } else {
-      showToast('No serial found — tap “+ serial no.” to add it');
+      showToast('No serial found — tap “Serial no.” to add it');
     }
   } catch {
     // OCR unavailable (offline / CDN blocked) — manual entry still works
@@ -1636,7 +1755,7 @@ async function scanSerial(key, dataUrl) {
 }
 
 // Project management
-function openProjects() { S.overlay = 'projects'; render(); }
+function openProjects() { S.overlay = 'projects'; S.projSearch = ''; render(); }
 function openRooms() { S.overlay = 'rooms'; render(); }
 function openSettings() { S.overlay = 'settings'; render(); }
 function openExport() { S.overlay = 'export'; render(); }
@@ -1857,19 +1976,19 @@ async function doExport() {
   const merge = (r, c1, c2) => merges.push({s:{r, c:c1}, e:{r, c:c2}});
 
   // Title
-  cell(row,0,'SPARK HOMES — REPAIR ESTIMATE', s({bold:true,sz:14,color:{rgb:'FFFFFF'}},'111827',{horizontal:'center',vertical:'center'}));
+  cell(row,0,'SPARK HOMES — REPAIR ESTIMATE', s({bold:true,sz:14,color:{rgb:'FFFFFF'}},'0C3629',{horizontal:'center',vertical:'center'}));
   merge(row,0,4); row++;
   cell(row,0,`Property: ${S.projectName}     Date: ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`,
-    s({sz:10,color:{rgb:'6B7280'}},'F9FAFB',{horizontal:'center'}));
+    s({sz:10,color:{rgb:'6B7570'}},'F4F3EE',{horizontal:'center'}));
   merge(row,0,4); row++; row++;
 
   const processSection = (label, rows) => {
     if (!rows.length) return;
-    cell(row,0,label.toUpperCase(), s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'EA580C',{vertical:'center'}));
-    for (let c=1;c<5;c++) cell(row,c,'',s({},'EA580C'));
+    cell(row,0,label.toUpperCase(), s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'156A50',{vertical:'center'}));
+    for (let c=1;c<5;c++) cell(row,c,'',s({},'156A50'));
     merge(row,0,4); row++;
     ['Repair Item','Unit','Unit Cost','Qty','Estimate'].forEach((h,c) =>
-      cell(row,c,h, s({bold:true,sz:10},'FFF7ED',{horizontal:c>=2?'right':'left'})));
+      cell(row,c,h, s({bold:true,sz:10},'E4EFE9',{horizontal:c>=2?'right':'left'})));
     row++;
     let secTot = 0;
     rows.forEach(({name, unit, cost, qty, total}) => {
@@ -1880,10 +1999,10 @@ async function doExport() {
       cell(row,4,total, s({sz:10},'FFFFFF',{horizontal:'right'}), '"$"#,##0');
       secTot += total; row++;
     });
-    cell(row,0,`${label} Total`, s({bold:true,sz:10,color:{rgb:'C2410C'}},'FFF7ED'));
+    cell(row,0,`${label} Total`, s({bold:true,sz:10,color:{rgb:'11553F'}},'E4EFE9'));
     merge(row,0,3);
-    for (let c=1;c<4;c++) cell(row,c,'',s({},'FFF7ED'));
-    cell(row,4,secTot, s({bold:true,sz:10,color:{rgb:'C2410C'}},'FFF7ED',{horizontal:'right'}), '"$"#,##0');
+    for (let c=1;c<4;c++) cell(row,c,'',s({},'E4EFE9'));
+    cell(row,4,secTot, s({bold:true,sz:10,color:{rgb:'11553F'}},'E4EFE9',{horizontal:'right'}), '"$"#,##0');
     row++; row++;
   };
 
@@ -1914,17 +2033,17 @@ async function doExport() {
   }
 
   const grand = calcGrandTotal();
-  cell(row,0,'TOTAL ESTIMATE', s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'111827',{horizontal:'center'}));
+  cell(row,0,'TOTAL ESTIMATE', s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'0C3629',{horizontal:'center'}));
   merge(row,0,3);
-  for (let c=1;c<4;c++) cell(row,c,'',s({},'111827'));
-  cell(row,4,grand, s({bold:true,sz:13,color:{rgb:'FFFFFF'}},'111827',{horizontal:'right'}), '"$"#,##0');
+  for (let c=1;c<4;c++) cell(row,c,'',s({},'0C3629'));
+  cell(row,4,grand, s({bold:true,sz:13,color:{rgb:'D8B472'}},'0C3629',{horizontal:'right'}), '"$"#,##0');
 
   // Captured serial numbers
   const serialEntries = Object.entries(S.serials||{}).filter(([,v]) => v);
   if (serialEntries.length) {
     row += 2;
-    cell(row,0,'SERIAL NUMBERS', s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'374151',{vertical:'center'}));
-    for (let c=1;c<5;c++) cell(row,c,'',s({},'374151'));
+    cell(row,0,'SERIAL NUMBERS', s({bold:true,sz:11,color:{rgb:'FFFFFF'}},'3A443F',{vertical:'center'}));
+    for (let c=1;c<5;c++) cell(row,c,'',s({},'3A443F'));
     merge(row,0,4); row++;
     for (const [key, serial] of serialEntries) {
       const [instId, itemId] = parseKey(key);

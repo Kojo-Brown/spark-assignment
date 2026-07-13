@@ -25,6 +25,7 @@ Then visit `http://localhost:8080`.
 
 ### Project Management
 - Create, rename, and delete multiple projects
+- Searchable project list, with saved date and estimate total on every row
 - Switch between projects without losing data
 - All data persisted in `localStorage` — works fully offline
 
@@ -49,9 +50,15 @@ Then visit `http://localhost:8080`.
 - **ZIP download** containing an Excel `.xlsx` cost breakdown and all walkthrough photos
 - Excel file: every checked item, quantity, unit cost, line total, section subtotals, grand total, and a captured serial-numbers table
 - Photo filenames include the room, item name, and serial number for easy triage
-- If no photos, exports a standalone `.xlsx` directly
-- Formatted with color-coded section headers, styled columns, and grand total row
+- If no photos, exports a standalone `.xlsx` directly — and the button says so: **Download Excel** with no photos, **Download ZIP** once photos are attached
+- Formatted with brand-colored section headers, styled columns, and grand total row
 - Works fully offline — the export libraries are precached by the service worker
+
+### Design
+- **Emerald & gold theme** — gradient hero total card, warm-stone light mode, deep-forest dark mode
+- Every icon is a real inline SVG — no emoji glyphs anywhere in the UI
+- Built for one-thumb use in the field: tapping an item's label toggles it (not just the checkbox), and every quantity field has −/+ stepper buttons
+- Safe-area-aware header, tabs, and nav for notched phones
 
 ### Deal Analyzer (Creative Addition)
 A built-in profit calculator that pulls the live repair total from the walkthrough and lets agents estimate the deal's margin before they leave the driveway:

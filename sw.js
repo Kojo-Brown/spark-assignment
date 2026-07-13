@@ -1,4 +1,4 @@
-const CACHE = 'spark-v3';
+const CACHE = 'spark-v4';
 
 // Same-origin app shell
 const ASSETS = [

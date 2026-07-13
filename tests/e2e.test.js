@@ -211,6 +211,36 @@ async function closeOverlay() {
     expectTrue(after !== '$0', 'total not $0');
   });
 
+  await test('tapping the item label toggles the checkbox', async () => {
+    const before = await page.$$eval('.item-check.checked', els => els.length);
+    const rows = await page.$$('.item-row');
+    let tapped = false;
+    for (const row of rows) {
+      const cb = await row.$('.item-check:not(.na):not(.checked)');
+      const tap = await row.$('.item-tap');
+      if (!cb || !tap) continue;
+      await tap.click();
+      await wait(250);
+      tapped = true;
+      break;
+    }
+    expectTrue(tapped, 'found an unchecked item label to tap');
+    const after = await page.$$eval('.item-check.checked', els => els.length);
+    expectGt(after, before, 'checked count increased after label tap');
+  });
+
+  await test('qty stepper buttons adjust quantity', async () => {
+    const stepper = await page.$('.qty-stepper');
+    expectTrue(stepper, 'qty stepper present');
+    const plus = (await stepper.$$('.qty-btn'))[1];
+    const input = await stepper.$('.qty-input');
+    const before = parseFloat(await input.evaluate(el => el.value)) || 0;
+    await plus.click();
+    await wait(300);
+    const after = parseFloat(await input.evaluate(el => el.value)) || 0;
+    expect(after, before + 1, 'qty incremented by stepper');
+  });
+
   await test('active section tab shows subtotal', async () => {
     const activeTab = await page.$('.tab-btn.active');
     const txt = await activeTab.evaluate(el => el.textContent);
@@ -383,11 +413,14 @@ async function closeOverlay() {
     expectTrue(await page.$('button[onclick="openExport()"]'), 'export button');
   });
 
-  await test('Export modal opens and shows Download ZIP button', async () => {
+  await test('Export modal opens with a download button matching content', async () => {
     await (await page.$('button[onclick="openExport()"]')).click();
     await wait(300);
     const txt = await $text('.modal-card');
-    expectContains(txt, 'Download ZIP', 'download zip in modal');
+    // Label must match what actually downloads: Excel when no photos, ZIP with photos
+    const photoCount = await page.evaluate(() =>
+      Object.values(S.photos).reduce((s, a) => s + (a?.length || 0), 0));
+    expectContains(txt, photoCount > 0 ? 'Download ZIP' : 'Download Excel', 'accurate download label');
     expectContains(txt, '$', 'grand total in modal');
   });
 
@@ -657,6 +690,26 @@ async function closeOverlay() {
 
   await closeOverlay();
 
+  await test('projects panel search filters projects', async () => {
+    // Create a second project so the search field appears
+    await page.click('button[onclick="openProjects()"]');
+    await wait(300);
+    await page.click('button[onclick="newProject()"]');
+    await wait(300);
+    await (await page.$('#prompt-input')).fill('222 Elm St');
+    await page.click('button[onclick="confirmPrompt()"]');
+    await wait(400);
+    await page.click('button[onclick="openProjects()"]');
+    await wait(300);
+    const search = await page.$('.panel-slide input[placeholder*="projects"]');
+    expectTrue(search, 'project search input present');
+    await search.fill('Elm');
+    await wait(300);
+    const names = await page.$$eval('.proj-row .proj-name', els => els.map(e => e.textContent.trim()));
+    expectTrue(names.length === 1 && names[0].includes('222 Elm St'), `filtered rows: ${JSON.stringify(names)}`);
+    await closeOverlay();
+  });
+
   // =========================================================================
   console.log('\n── Manifest & PWA metadata ───────────────────────────────────────');
   // =========================================================================
@@ -673,13 +726,13 @@ async function closeOverlay() {
     expect(content, 'yes', 'apple-mobile-web-app-capable');
   });
 
-  await test('manifest theme_color is #C2451E', async () => {
+  await test('manifest theme_color matches the app theme', async () => {
     const res = await page.evaluate(async () => {
       const r = await fetch('./manifest.json');
       const j = await r.json();
       return j.theme_color;
     });
-    expect(res, '#C2451E', 'theme_color');
+    expect(res, '#156A50', 'theme_color');
   });
 
   await test('service worker is registered', async () => {
